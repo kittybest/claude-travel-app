@@ -1,38 +1,39 @@
-import { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Polyline } from 'react-leaflet';
+import { useEffect } from 'react';
+import { MapContainer, TileLayer, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Trip } from '../../types';
 import { getDayColor } from '../../constants/colors';
 import SpotMarker from './SpotMarker';
 
+function FitBounds({ trip }: { trip: Trip }) {
+  const map = useMap();
+  useEffect(() => {
+    const allSpots = trip.days.flatMap(d => d.spots);
+    if (allSpots.length === 0) return;
+    const bounds = L.latLngBounds(allSpots.map(s => [s.lat, s.lng]));
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+  }, [map, trip]);
+  return null;
+}
+
 interface Props {
   trip: Trip;
 }
 
 export default function SharedTripMap({ trip }: Props) {
-  const mapRef = useRef<L.Map | null>(null);
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-    const allSpots = trip.days.flatMap(d => d.spots);
-    if (allSpots.length === 0) return;
-    const bounds = L.latLngBounds(allSpots.map(s => [s.lat, s.lng]));
-    mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-  }, [trip]);
-
   return (
     <div className="w-full h-full relative">
       <MapContainer
         center={[35.6762, 139.6503]}
         zoom={3}
         className="w-full h-full"
-        ref={mapRef}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <FitBounds trip={trip} />
         {trip.days.map(day => {
           const positions = day.spots.map(s => [s.lat, s.lng] as [number, number]);
           return (

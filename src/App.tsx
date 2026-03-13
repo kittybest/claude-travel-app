@@ -62,16 +62,11 @@ function AppContent() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  const handleCloseShared = () => {
-    setSharedTrip(null);
-    window.history.replaceState(null, '', window.location.pathname);
-  };
-
   if (sharedTrip) {
     return (
       <div className="flex flex-col md:flex-row h-full">
         <Sidebar>
-          <SharedTripView trip={sharedTrip} onClose={handleCloseShared} />
+          <SharedTripView trip={sharedTrip} />
         </Sidebar>
         <MainContent>
           <SharedTripMap trip={sharedTrip} />

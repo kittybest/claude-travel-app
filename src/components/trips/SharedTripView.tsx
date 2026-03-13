@@ -2,27 +2,20 @@ import { useState } from 'react';
 import { Trip } from '../../types';
 import { getDayColor } from '../../constants/colors';
 import { getCategoryIcon } from '../../constants/categories';
-import { BackIcon, ExternalLinkIcon } from '../ui/Icons';
+import { ExternalLinkIcon } from '../ui/Icons';
 import StarRating from '../spots/StarRating';
 
 interface Props {
   trip: Trip;
-  onClose: () => void;
 }
 
-export default function SharedTripView({ trip, onClose }: Props) {
+export default function SharedTripView({ trip }: Props) {
   const [selectedDay, setSelectedDay] = useState(1);
   const day = trip.days.find(d => d.dayNumber === selectedDay);
 
   return (
     <div className="p-4 flex flex-col h-full">
       <div className="flex items-center gap-2 mb-3">
-        <button onClick={onClose}
-          className="p-1.5 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors"
-          title="My Trips"
-        >
-          <BackIcon size={14} />
-        </button>
         <h2 className="text-lg font-bold text-gray-900 flex-1 truncate">{trip.name}</h2>
         <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Shared</span>
       </div>
