@@ -58,7 +58,7 @@ export default function SharedTripView({ trip }: Props) {
                   {spot.notes && <p className="text-xs text-gray-400 truncate">{spot.notes}</p>}
                 </div>
                 <a
-                  href={`https://www.google.com/maps?q=${spot.lat},${spot.lng}`}
+                  href={spot.googleMapsUrl || `https://www.google.com/maps?q=${spot.lat},${spot.lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1 rounded-full bg-blue-50 text-blue-400 hover:bg-blue-100 hover:text-blue-600 transition-colors"

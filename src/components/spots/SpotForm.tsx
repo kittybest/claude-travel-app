@@ -62,6 +62,7 @@ export default function SpotForm() {
       category: category || undefined,
       price: price ? parseFloat(price) : undefined,
       currency: price ? currency : undefined,
+      googleMapsUrl: mapsLink || undefined,
     });
     setAddingSpot(false);
   };

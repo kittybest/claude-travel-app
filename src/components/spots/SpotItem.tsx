@@ -56,6 +56,7 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
       category: category || undefined,
       price: price ? parseFloat(price) : undefined,
       currency: price ? currency : undefined,
+      googleMapsUrl: mapsLink || spot.googleMapsUrl || undefined,
     };
     if (newLat !== null && newLng !== null) {
       updates.lat = newLat;
@@ -156,7 +157,7 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
         </div>
         {spot.notes && <p className="text-xs text-gray-400 truncate">{spot.notes}</p>}
         <a
-          href={`https://www.google.com/maps?q=${spot.lat},${spot.lng}`}
+          href={spot.googleMapsUrl || `https://www.google.com/maps?q=${spot.lat},${spot.lng}`}
           target="_blank" rel="noopener noreferrer"
           className="inline-flex items-center gap-0.5 text-[10px] text-blue-400 hover:text-blue-600"
           onClick={e => e.stopPropagation()}

@@ -10,6 +10,7 @@ export interface Spot {
   category?: SpotCategory;
   price?: number;
   currency?: string;
+  googleMapsUrl?: string;
 }
 
 export interface Day {

@@ -55,7 +55,7 @@ export default function SpotMarker({ spot, dayNumber, orderLabel }: Props) {
           {spot.notes && <p className="text-gray-500 text-xs mt-1">{spot.notes}</p>}
           <p className="text-gray-400 text-[10px] mt-1">Day {dayNumber}</p>
           <a
-            href={`https://www.google.com/maps?q=${spot.lat},${spot.lng}`}
+            href={spot.googleMapsUrl || `https://www.google.com/maps?q=${spot.lat},${spot.lng}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{ color: '#3b82f6', fontSize: '10px', textDecoration: 'underline' }}
