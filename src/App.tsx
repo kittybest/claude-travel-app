@@ -51,12 +51,14 @@ function AppContent() {
   const [sharedTrip, setSharedTrip] = useState<Trip | null>(null);
 
   useEffect(() => {
-    const trip = decodeTripFromUrl();
-    if (trip) setSharedTrip(trip);
+    decodeTripFromUrl().then(trip => {
+      if (trip) setSharedTrip(trip);
+    });
 
     const onHashChange = () => {
-      const trip = decodeTripFromUrl();
-      setSharedTrip(trip);
+      decodeTripFromUrl().then(trip => {
+        setSharedTrip(trip);
+      });
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);

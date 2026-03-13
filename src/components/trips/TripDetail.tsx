@@ -27,7 +27,7 @@ export default function TripDetail() {
   };
 
   const handleShare = async () => {
-    const url = encodeTripToUrl(selectedTrip);
+    const url = await encodeTripToUrl(selectedTrip);
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
