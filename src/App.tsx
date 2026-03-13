@@ -9,7 +9,7 @@ import SharedTripView from './components/trips/SharedTripView';
 import TripMap from './components/map/TripMap';
 import SharedTripMap from './components/map/SharedTripMap';
 import LoginModal from './components/auth/LoginModal';
-import { LockIcon, UnlockIcon, LogOutIcon } from './components/ui/Icons';
+import { LockIcon, UnlockIcon } from './components/ui/Icons';
 import { fixLeafletIcons } from './utils/leafletSetup';
 import { decodeTripFromUrl } from './utils/shareTrip';
 import { Trip } from './types';

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useTripContext } from '../../context/TripContext';
-import { getCategoryIcon } from '../../constants/categories';
 import { SpotCategory } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { AddIcon, DeleteIcon } from '../ui/Icons';

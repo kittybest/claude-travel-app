@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Trip } from '../../types';
-import { getDayColor, DAY_COLORS } from '../../constants/colors';
+import { getDayColor } from '../../constants/colors';
 import SpotMarker from './SpotMarker';
 
 interface Props {
