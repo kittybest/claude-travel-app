@@ -6,15 +6,6 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
-function generateId(): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let id = '';
-  for (let i = 0; i < 8; i++) {
-    id += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return id;
-}
-
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -26,11 +17,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'POST') {
     try {
-      const { trip } = req.body;
-      if (!trip) {
-        return res.status(400).json({ error: 'Missing trip data' });
+      const { id, trip } = req.body;
+      if (!trip || !id) {
+        return res.status(400).json({ error: 'Missing trip data or id' });
       }
-      const id = generateId();
       await redis.set(`trip:${id}`, JSON.stringify(trip));
       return res.status(200).json({ id });
     } catch (err) {

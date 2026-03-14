@@ -7,7 +7,7 @@ export async function encodeTripToUrl(trip: Trip): Promise<string> {
     const res = await fetch('/api/share', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ trip }),
+      body: JSON.stringify({ id: trip.id, trip }),
     });
     if (res.ok) {
       const { id } = await res.json();
