@@ -6,7 +6,7 @@ import TripCard from './TripCard';
 import TripForm from './TripForm';
 
 export default function TripList() {
-  const { trips, selectedTripId, setSelectedTripId, setSelectedDayNumber } = useTripContext();
+  const { trips, loaded, selectedTripId, setSelectedTripId, setSelectedDayNumber } = useTripContext();
   const { isAuthorized } = useAuth();
   const [showForm, setShowForm] = useState(false);
 
@@ -30,7 +30,9 @@ export default function TripList() {
           </button>
         )}
       </div>
-      {trips.length === 0 ? (
+      {!loaded ? (
+        <p className="text-gray-400 text-sm text-center py-8">Loading trips...</p>
+      ) : trips.length === 0 ? (
         <p className="text-gray-400 text-sm text-center py-8">No trips yet.</p>
       ) : (
         <div className="space-y-2">

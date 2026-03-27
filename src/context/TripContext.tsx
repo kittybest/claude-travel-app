@@ -4,6 +4,7 @@ import { useTrips } from '../hooks/useTrips';
 
 interface TripContextType {
   trips: Trip[];
+  loaded: boolean;
   selectedTripId: string | null;
   selectedDayNumber: number;
   addingSpot: boolean;
@@ -28,7 +29,7 @@ const TripContext = createContext<TripContextType | null>(null);
 
 export function TripProvider({ children }: { children: ReactNode }) {
   const {
-    trips, createTrip, updateTrip, deleteTrip,
+    trips, loaded, createTrip, updateTrip, deleteTrip,
     addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
     addExpense, updateExpense, removeExpense,
   } = useTrips();
@@ -40,7 +41,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
 
   return (
     <TripContext.Provider value={{
-      trips, selectedTripId, selectedDayNumber, addingSpot,
+      trips, loaded, selectedTripId, selectedDayNumber, addingSpot,
       setSelectedTripId, setSelectedDayNumber, setAddingSpot,
       createTrip, updateTrip, deleteTrip,
       addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,

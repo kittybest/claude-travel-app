@@ -3,7 +3,7 @@ import { hasAuthCookie, setAuthCookie, removeAuthCookie, verifyPassword } from '
 
 interface AuthContextType {
   isAuthorized: boolean;
-  login: (password: string) => boolean;
+  login: (password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -12,8 +12,9 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthorized, setIsAuthorized] = useState(() => hasAuthCookie());
 
-  const login = useCallback((password: string) => {
-    if (verifyPassword(password)) {
+  const login = useCallback(async (password: string) => {
+    const ok = await verifyPassword(password);
+    if (ok) {
       setAuthCookie();
       setIsAuthorized(true);
       return true;

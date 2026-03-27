@@ -10,10 +10,14 @@ export default function LoginModal({ onClose }: Props) {
   const { login } = useAuth();
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(password)) {
+    setLoading(true);
+    const ok = await login(password);
+    setLoading(false);
+    if (ok) {
       onClose();
     } else {
       setError(true);
@@ -42,9 +46,9 @@ export default function LoginModal({ onClose }: Props) {
         />
         {error && <p className="text-xs text-red-500 mb-3">Wrong password. Try again.</p>}
         <div className="flex gap-2">
-          <button type="submit"
-            className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 text-white rounded-full py-2 text-sm hover:bg-blue-700 transition-colors">
-            <LockIcon size={13} /> Unlock
+          <button type="submit" disabled={loading}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-blue-600 text-white rounded-full py-2 text-sm hover:bg-blue-700 transition-colors disabled:opacity-50">
+            <LockIcon size={13} /> {loading ? 'Verifying...' : 'Unlock'}
           </button>
           <button type="button" onClick={onClose}
             className="flex-1 flex items-center justify-center gap-1.5 bg-gray-100 text-gray-700 rounded-full py-2 text-sm hover:bg-gray-200 transition-colors">

@@ -15,6 +15,19 @@ export function hasAuthCookie(): boolean {
   return document.cookie.split(';').some(c => c.trim().startsWith(`${COOKIE_NAME}=${TOKEN_VALUE}`));
 }
 
-export function verifyPassword(input: string): boolean {
-  return input === '19960820';
+export async function verifyPassword(input: string): Promise<boolean> {
+  try {
+    const res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: input }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.ok === true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }

@@ -1,11 +1,63 @@
-import { useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Trip, Spot, Expense } from '../types';
-import { useLocalStorage } from './useLocalStorage';
 import { generateId } from '../utils/id';
 import { generateDays } from '../utils/dates';
 
+async function fetchTrips(): Promise<Trip[]> {
+  try {
+    const res = await fetch('/api/trips');
+    if (res.ok) {
+      const { trips } = await res.json();
+      return trips || [];
+    }
+  } catch {
+    // fall back to localStorage
+  }
+  try {
+    const stored = localStorage.getItem('travel-app-trips');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function saveTrips(trips: Trip[]): Promise<void> {
+  // Always save to localStorage as cache
+  localStorage.setItem('travel-app-trips', JSON.stringify(trips));
+  try {
+    await fetch('/api/trips', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trips }),
+    });
+  } catch {
+    // localStorage is the fallback
+  }
+}
+
 export function useTrips() {
-  const [trips, setTrips] = useLocalStorage<Trip[]>('travel-app-trips', []);
+  const [trips, setTripsState] = useState<Trip[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const saveTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  // Load trips from Redis on mount
+  useEffect(() => {
+    fetchTrips().then(t => {
+      setTripsState(t);
+      setLoaded(true);
+    });
+  }, []);
+
+  // Debounced save to Redis whenever trips change (skip initial load)
+  const setTrips = useCallback((updater: (prev: Trip[]) => Trip[]) => {
+    setTripsState(prev => {
+      const next = updater(prev);
+      // Debounce saves to avoid excessive API calls
+      if (saveTimeout.current) clearTimeout(saveTimeout.current);
+      saveTimeout.current = setTimeout(() => saveTrips(next), 300);
+      return next;
+    });
+  }, []);
 
   const createTrip = useCallback((name: string, startDate: string, endDate: string, defaultCurrency?: string) => {
     const trip: Trip = {
@@ -140,7 +192,7 @@ export function useTrips() {
   }, [setTrips]);
 
   return {
-    trips, createTrip, updateTrip, deleteTrip,
+    trips, loaded, createTrip, updateTrip, deleteTrip,
     addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
     addExpense, updateExpense, removeExpense,
   };
