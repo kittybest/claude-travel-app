@@ -3,22 +3,37 @@ import { Trip, Spot, Expense } from '../types';
 import { generateId } from '../utils/id';
 import { generateDays } from '../utils/dates';
 
-async function fetchTrips(): Promise<Trip[]> {
-  try {
-    const res = await fetch('/api/trips');
-    if (res.ok) {
-      const { trips } = await res.json();
-      return trips || [];
-    }
-  } catch {
-    // fall back to localStorage
-  }
+function getLocalTrips(): Trip[] {
   try {
     const stored = localStorage.getItem('travel-app-trips');
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
   }
+}
+
+async function fetchTrips(): Promise<Trip[]> {
+  try {
+    const res = await fetch('/api/trips');
+    if (res.ok) {
+      const { trips } = await res.json();
+      const remoteTrips: Trip[] = trips || [];
+      if (remoteTrips.length > 0) {
+        return remoteTrips;
+      }
+      // Redis is empty — check localStorage for migration
+      const localTrips = getLocalTrips();
+      if (localTrips.length > 0) {
+        // One-time migration: push localStorage trips to Redis
+        await saveTrips(localTrips);
+        return localTrips;
+      }
+      return [];
+    }
+  } catch {
+    // API unavailable — fall back to localStorage
+  }
+  return getLocalTrips();
 }
 
 async function saveTrips(trips: Trip[]): Promise<void> {
