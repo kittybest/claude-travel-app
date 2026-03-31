@@ -42,7 +42,11 @@ export default function SharedTripView({ trip }: Props) {
       }))
   );
   const manualExpenses = (trip.expenses || []).map(e => ({ ...e, isFromSpot: false }));
-  const allExpenses = [...spotExpenses, ...manualExpenses];
+  const allExpenses = [...spotExpenses, ...manualExpenses].sort((a, b) => {
+    const da = a.dayNumber ?? 0;
+    const db = b.dayNumber ?? 0;
+    return da - db;
+  });
 
   const summary: Record<string, Record<string, number>> = {};
   for (const e of allExpenses) {
