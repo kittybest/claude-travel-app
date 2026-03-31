@@ -56,7 +56,9 @@ export default function TripMap() {
         <MapClickHandler />
         <FlyToHandler />
         {selectedTrip?.days.map(day => {
-          const positions = day.spots.map(s => [s.lat, s.lng] as [number, number]);
+          // Only include non-multi-day spots in polyline
+          const polylineSpots = day.spots.filter(s => !s.endDayNumber);
+          const positions = polylineSpots.map(s => [s.lat, s.lng] as [number, number]);
           return (
             <span key={`day-${day.dayNumber}`}>
               {positions.length >= 2 && (
@@ -76,6 +78,7 @@ export default function TripMap() {
                   spot={spot}
                   dayNumber={day.dayNumber}
                   orderLabel={idx + 1}
+                  dayRangeLabel={spot.endDayNumber ? `Day ${day.dayNumber}–${spot.endDayNumber}` : undefined}
                 />
               ))}
             </span>

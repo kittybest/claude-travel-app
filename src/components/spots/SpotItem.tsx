@@ -16,9 +16,11 @@ interface Props {
   onDragOver: (e: React.DragEvent, index: number) => void;
   onDragEnd: () => void;
   isDragOver: boolean;
+  isReference?: boolean;
+  homeDayNumber?: number;
 }
 
-export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOver, onDragEnd, isDragOver }: Props) {
+export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOver, onDragEnd, isDragOver, isReference, homeDayNumber }: Props) {
   const { selectedTrip, removeSpot, updateSpot, moveSpot } = useTripContext();
   const { isAuthorized } = useAuth();
   const [editing, setEditing] = useState(false);
@@ -33,7 +35,10 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
   const [newLng, setNewLng] = useState<number | null>(null);
   const [linkError, setLinkError] = useState('');
   const [moveToDayNumber, setMoveToDayNumber] = useState<number>(dayNumber);
-  const color = getDayColor(dayNumber);
+  const [endDay, setEndDay] = useState<string>(spot.endDayNumber?.toString() ?? '');
+  const actualDayNumber = homeDayNumber ?? dayNumber;
+  const color = getDayColor(actualDayNumber);
+  const dayRangeLabel = spot.endDayNumber ? `Day ${actualDayNumber}–${spot.endDayNumber}` : null;
 
   if (!selectedTrip) return null;
 
@@ -57,13 +62,15 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
       price: price ? parseFloat(price) : undefined,
       currency: price ? currency : undefined,
       googleMapsUrl: mapsLink || spot.googleMapsUrl || undefined,
+      endDayNumber: endDay ? parseInt(endDay) : undefined,
     };
     if (newLat !== null && newLng !== null) {
       updates.lat = newLat;
       updates.lng = newLng;
     }
-    updateSpot(selectedTrip.id, dayNumber, spot.id, updates);
-    if (moveToDayNumber !== dayNumber) {
+    const saveDayNumber = isReference ? actualDayNumber : dayNumber;
+    updateSpot(selectedTrip.id, saveDayNumber, spot.id, updates);
+    if (!isReference && moveToDayNumber !== dayNumber) {
       moveSpot(selectedTrip.id, dayNumber, moveToDayNumber, spot.id);
     }
     setEditing(false);
@@ -103,15 +110,31 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
             <p className="text-[10px] text-green-600 mt-0.5">New location: {newLat.toFixed(4)}, {newLng.toFixed(4)}</p>
           )}
         </div>
+        {!isReference && (
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500">Move to:</span>
+            <select value={moveToDayNumber} onChange={e => setMoveToDayNumber(Number(e.target.value))}
+              className="border border-gray-300 rounded px-1 py-0.5">
+              {selectedTrip.days.map(d => (
+                <option key={d.dayNumber} value={d.dayNumber}>
+                  Day {d.dayNumber}{d.dayNumber === dayNumber ? ' (current)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex items-center gap-2">
-          <span className="text-gray-500">Move to:</span>
-          <select value={moveToDayNumber} onChange={e => setMoveToDayNumber(Number(e.target.value))}
+          <span className="text-gray-500">Span to:</span>
+          <select value={endDay} onChange={e => setEndDay(e.target.value)}
             className="border border-gray-300 rounded px-1 py-0.5">
-            {selectedTrip.days.map(d => (
-              <option key={d.dayNumber} value={d.dayNumber}>
-                Day {d.dayNumber}{d.dayNumber === dayNumber ? ' (current)' : ''}
-              </option>
-            ))}
+            <option value="">Single day</option>
+            {selectedTrip.days
+              .filter(d => d.dayNumber > actualDayNumber)
+              .map(d => (
+                <option key={d.dayNumber} value={d.dayNumber}>
+                  Day {d.dayNumber} ({actualDayNumber}–{d.dayNumber})
+                </option>
+              ))}
           </select>
         </div>
         <div className="flex gap-1.5">
@@ -134,20 +157,26 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
 
   return (
     <div
-      draggable={isAuthorized}
-      onDragStart={() => isAuthorized && onDragStart(index)}
-      onDragOver={e => isAuthorized && onDragOver(e, index)}
-      onDragEnd={isAuthorized ? onDragEnd : undefined}
-      className={`flex items-start gap-2 p-2 rounded hover:bg-gray-50 group ${isAuthorized ? 'cursor-grab active:cursor-grabbing' : ''} transition-all ${
+      draggable={isAuthorized && !isReference}
+      onDragStart={() => isAuthorized && !isReference && onDragStart(index)}
+      onDragOver={e => isAuthorized && !isReference && onDragOver(e, index)}
+      onDragEnd={isAuthorized && !isReference ? onDragEnd : undefined}
+      className={`flex items-start gap-2 p-2 rounded hover:bg-gray-50 group ${isAuthorized && !isReference ? 'cursor-grab active:cursor-grabbing' : ''} transition-all ${
         isDragOver ? 'border-t-2 border-blue-400' : 'border-t-2 border-transparent'
-      }`}
+      } ${isReference ? 'opacity-50' : ''}`}
     >
-      <span className="text-gray-300 text-xs mt-0.5 select-none">::</span>
-      <span className="w-3 h-3 rounded-full mt-0.5 flex-shrink-0" style={{ backgroundColor: color }} />
+      {!isReference && <span className="text-gray-300 text-xs mt-0.5 select-none">::</span>}
+      {isReference
+        ? <span className="w-3 h-3 rounded-full mt-0.5 flex-shrink-0 border-2" style={{ borderColor: color }} />
+        : <span className="w-3 h-3 rounded-full mt-0.5 flex-shrink-0" style={{ backgroundColor: color }} />
+      }
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1">
           {spot.category && <span className="text-xs">{getCategoryIcon(spot.category)}</span>}
-          <p className="text-sm text-gray-800 truncate">{spot.name}</p>
+          <p className={`text-sm truncate ${isReference ? 'text-gray-500' : 'text-gray-800'}`}>{spot.name}</p>
+          {dayRangeLabel && (
+            <span className="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full whitespace-nowrap">{dayRangeLabel}</span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {spot.rating ? <StarRating value={spot.rating} size="sm" /> : null}
@@ -168,19 +197,24 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
       {isAuthorized && (
         <div className="hidden group-hover:flex gap-1">
           <button
-            onClick={() => setEditing(true)}
+            onClick={() => {
+              setEndDay(spot.endDayNumber?.toString() ?? '');
+              setEditing(true);
+            }}
             className="p-1 rounded-full bg-cyan-50 text-cyan-500 hover:bg-cyan-100 transition-colors"
             title="Edit"
           >
             <EditIcon size={12} />
           </button>
-          <button
-            onClick={() => removeSpot(selectedTrip.id, dayNumber, spot.id)}
-            className="p-1 rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
-            title="Delete"
-          >
-            <DeleteIcon size={12} />
-          </button>
+          {!isReference && (
+            <button
+              onClick={() => removeSpot(selectedTrip.id, dayNumber, spot.id)}
+              className="p-1 rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
+              title="Delete"
+            >
+              <DeleteIcon size={12} />
+            </button>
+          )}
         </div>
       )}
     </div>

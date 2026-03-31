@@ -16,6 +16,15 @@ export default function DaySpotList() {
   const day = selectedTrip.days.find(d => d.dayNumber === selectedDayNumber);
   if (!day) return null;
 
+  // Find multi-day spots from other days that span into this day
+  const referenceSpots = selectedTrip.days
+    .filter(d => d.dayNumber !== selectedDayNumber)
+    .flatMap(d =>
+      d.spots
+        .filter(s => s.endDayNumber && d.dayNumber < selectedDayNumber && s.endDayNumber >= selectedDayNumber)
+        .map(s => ({ spot: s, homeDayNumber: d.dayNumber }))
+    );
+
   const handleDragStart = (index: number) => setDragIndex(index);
   const handleDragOver = (e: React.DragEvent, index: number) => { e.preventDefault(); setDragOverIndex(index); };
   const handleDragEnd = () => {
@@ -30,7 +39,7 @@ export default function DaySpotList() {
     <div>
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-medium text-gray-700">
-          Spots ({day.spots.length})
+          Spots ({day.spots.length}{referenceSpots.length > 0 ? ` + ${referenceSpots.length}` : ''})
         </h3>
         {isAuthorized && !addingSpot && (
           <button
@@ -44,12 +53,26 @@ export default function DaySpotList() {
         )}
       </div>
       {addingSpot && <SpotForm />}
-      {day.spots.length === 0 && !addingSpot ? (
+      {day.spots.length === 0 && referenceSpots.length === 0 && !addingSpot ? (
         <p className="text-gray-400 text-xs text-center py-4">
           No spots yet. Click "Add Spot" or click on the map.
         </p>
       ) : (
         <div>
+          {referenceSpots.map(({ spot, homeDayNumber }) => (
+            <SpotItem
+              key={`ref-${spot.id}`}
+              spot={spot}
+              dayNumber={selectedDayNumber}
+              index={-1}
+              onDragStart={() => {}}
+              onDragOver={() => {}}
+              onDragEnd={() => {}}
+              isDragOver={false}
+              isReference
+              homeDayNumber={homeDayNumber}
+            />
+          ))}
           {day.spots.map((spot, index) => (
             <SpotItem
               key={spot.id}

@@ -8,6 +8,7 @@ interface Props {
   spot: Spot;
   dayNumber: number;
   orderLabel?: number;
+  dayRangeLabel?: string;
 }
 
 function createColoredIcon(color: string, label?: number) {
@@ -37,7 +38,7 @@ function renderStars(rating: number) {
   return '★'.repeat(rating) + '☆'.repeat(5 - rating);
 }
 
-export default function SpotMarker({ spot, dayNumber, orderLabel }: Props) {
+export default function SpotMarker({ spot, dayNumber, orderLabel, dayRangeLabel }: Props) {
   const color = getDayColor(dayNumber);
   const icon = createColoredIcon(color, orderLabel);
 
@@ -53,7 +54,7 @@ export default function SpotMarker({ spot, dayNumber, orderLabel }: Props) {
             <p style={{ color: '#6b7280', fontSize: '11px', margin: '2px 0' }}>{spot.currency} {spot.price.toFixed(2)}</p>
           )}
           {spot.notes && <p className="text-gray-500 text-xs mt-1">{spot.notes}</p>}
-          <p className="text-gray-400 text-[10px] mt-1">Day {dayNumber}</p>
+          <p className="text-gray-400 text-[10px] mt-1">{dayRangeLabel || `Day ${dayNumber}`}</p>
           <a
             href={spot.googleMapsUrl || `https://www.google.com/maps?q=${spot.lat},${spot.lng}`}
             target="_blank"

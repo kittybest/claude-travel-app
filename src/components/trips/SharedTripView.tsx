@@ -102,8 +102,36 @@ export default function SharedTripView({ trip }: Props) {
             })}
           </div>
           <div className="flex-1 overflow-y-auto">
-            {day && day.spots.length > 0 ? (
+            {(() => {
+              const refSpots = trip.days
+                .filter(d => d.dayNumber !== selectedDay)
+                .flatMap(d =>
+                  d.spots
+                    .filter(s => s.endDayNumber && d.dayNumber < selectedDay && s.endDayNumber >= selectedDay)
+                    .map(s => ({ spot: s, homeDayNumber: d.dayNumber }))
+                );
+              return day && (day.spots.length > 0 || refSpots.length > 0) ? (
               <div className="space-y-1">
+                {refSpots.map(({ spot, homeDayNumber }) => (
+                  <div key={`ref-${spot.id}`} className="flex items-start gap-2 p-2 rounded hover:bg-gray-50 opacity-50">
+                    <span
+                      className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] font-bold border-2"
+                      style={{ borderColor: getDayColor(homeDayNumber), color: getDayColor(homeDayNumber) }}
+                    >
+                      ┈
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1">
+                        {spot.category && <span className="text-xs">{getCategoryIcon(spot.category)}</span>}
+                        <p className="text-sm text-gray-500 truncate">{spot.name}</p>
+                        <span className="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                          Day {homeDayNumber}–{spot.endDayNumber}
+                        </span>
+                      </div>
+                      {spot.notes && <p className="text-xs text-gray-400 truncate">{spot.notes}</p>}
+                    </div>
+                  </div>
+                ))}
                 {day.spots.map((spot, idx) => (
                   <div key={spot.id} className="flex items-start gap-2 p-2 rounded hover:bg-gray-50">
                     <span
@@ -139,7 +167,8 @@ export default function SharedTripView({ trip }: Props) {
               </div>
             ) : (
               <p className="text-gray-400 text-xs text-center py-4">No spots for this day.</p>
-            )}
+            );
+            })()}
           </div>
         </>
       ) : (

@@ -11,6 +11,7 @@ export interface Spot {
   price?: number;
   currency?: string;
   googleMapsUrl?: string;
+  endDayNumber?: number;
 }
 
 export interface Day {
