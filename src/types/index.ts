@@ -29,6 +29,12 @@ export interface Expense {
   dayNumber?: number; // optional, for day-specific expenses
 }
 
+export interface Note {
+  id: string;
+  text: string;
+  link?: string;
+}
+
 export interface Trip {
   id: string;
   name: string;
@@ -36,5 +42,6 @@ export interface Trip {
   endDate: string;
   days: Day[];
   expenses: Expense[];
+  notes: Note[];
   defaultCurrency?: string;
 }

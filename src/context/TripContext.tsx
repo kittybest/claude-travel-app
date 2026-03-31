@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { Trip, Spot, Expense } from '../types';
+import { Trip, Spot, Expense, Note } from '../types';
 import { useTrips } from '../hooks/useTrips';
 
 interface TripContextType {
@@ -22,6 +22,9 @@ interface TripContextType {
   addExpense: (tripId: string, expense: Omit<Expense, 'id'>) => void;
   updateExpense: (tripId: string, expenseId: string, updates: Partial<Omit<Expense, 'id'>>) => void;
   removeExpense: (tripId: string, expenseId: string) => void;
+  addNote: (tripId: string, note: Omit<Note, 'id'>) => void;
+  updateNote: (tripId: string, noteId: string, updates: Partial<Omit<Note, 'id'>>) => void;
+  removeNote: (tripId: string, noteId: string) => void;
   selectedTrip: Trip | undefined;
 }
 
@@ -32,6 +35,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
     trips, loaded, createTrip, updateTrip, deleteTrip,
     addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
     addExpense, updateExpense, removeExpense,
+    addNote, updateNote, removeNote,
   } = useTrips();
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [selectedDayNumber, setSelectedDayNumber] = useState(1);
@@ -46,6 +50,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
       createTrip, updateTrip, deleteTrip,
       addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
       addExpense, updateExpense, removeExpense,
+      addNote, updateNote, removeNote,
       selectedTrip,
     }}>
       {children}

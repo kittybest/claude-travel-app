@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Trip, Spot, Expense } from '../types';
+import { Trip, Spot, Expense, Note } from '../types';
 import { generateId } from '../utils/id';
 import { generateDays } from '../utils/dates';
 
@@ -82,6 +82,7 @@ export function useTrips() {
       endDate,
       days: generateDays(startDate, endDate),
       expenses: [],
+      notes: [],
       defaultCurrency: defaultCurrency || 'USD',
     };
     setTrips(prev => [...prev, trip]);
@@ -206,9 +207,34 @@ export function useTrips() {
     }));
   }, [setTrips]);
 
+  const addNote = useCallback((tripId: string, note: Omit<Note, 'id'>) => {
+    setTrips(prev => prev.map(t => {
+      if (t.id !== tripId) return t;
+      return { ...t, notes: [...(t.notes || []), { ...note, id: generateId() }] };
+    }));
+  }, [setTrips]);
+
+  const updateNote = useCallback((tripId: string, noteId: string, updates: Partial<Omit<Note, 'id'>>) => {
+    setTrips(prev => prev.map(t => {
+      if (t.id !== tripId) return t;
+      return {
+        ...t,
+        notes: (t.notes || []).map(n => n.id === noteId ? { ...n, ...updates } : n),
+      };
+    }));
+  }, [setTrips]);
+
+  const removeNote = useCallback((tripId: string, noteId: string) => {
+    setTrips(prev => prev.map(t => {
+      if (t.id !== tripId) return t;
+      return { ...t, notes: (t.notes || []).filter(n => n.id !== noteId) };
+    }));
+  }, [setTrips]);
+
   return {
     trips, loaded, createTrip, updateTrip, deleteTrip,
     addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
     addExpense, updateExpense, removeExpense,
+    addNote, updateNote, removeNote,
   };
 }

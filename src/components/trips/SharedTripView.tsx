@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Trip, SpotCategory } from '../../types';
 import { getDayColor } from '../../constants/colors';
 import { getCategoryIcon } from '../../constants/categories';
-import { ExternalLinkIcon, MapPinIcon, DollarIcon } from '../ui/Icons';
+import { ExternalLinkIcon, MapPinIcon, DollarIcon, NoteIcon } from '../ui/Icons';
 import StarRating from '../spots/StarRating';
 
-type Tab = 'spots' | 'expenses';
+type Tab = 'spots' | 'expenses' | 'notes';
 
 interface Props {
   trip: Trip;
@@ -83,9 +83,45 @@ export default function SharedTripView({ trip }: Props) {
         >
           <DollarIcon size={12} /> Expenses
         </button>
+        <button
+          onClick={() => setActiveTab('notes')}
+          className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium -mb-px ${
+            activeTab === 'notes' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          <NoteIcon size={12} /> Notes
+        </button>
       </div>
 
-      {activeTab === 'spots' ? (
+      {activeTab === 'notes' ? (
+        <div className="flex-1 overflow-y-auto">
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-gray-700">Notes</h3>
+            {(trip.notes || []).length === 0 ? (
+              <p className="text-gray-400 text-xs text-center py-2">No notes yet.</p>
+            ) : (
+              <div className="space-y-1">
+                {(trip.notes || []).map(note => (
+                  <div key={note.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 text-xs">
+                    <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-purple-400" />
+                    <div className="flex-1 min-w-0">
+                      {note.link ? (
+                        <a href={note.link} target="_blank" rel="noopener noreferrer"
+                          className="text-blue-500 hover:text-blue-700 hover:underline flex items-center gap-1">
+                          <span className="truncate">{note.text}</span>
+                          <ExternalLinkIcon size={10} />
+                        </a>
+                      ) : (
+                        <p className="text-gray-700 truncate">{note.text}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : activeTab === 'spots' ? (
         <>
           <div className="flex gap-1 overflow-x-auto pb-1 mb-3">
             {trip.days.map(d => {

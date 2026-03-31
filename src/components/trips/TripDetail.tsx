@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { useTripContext } from '../../context/TripContext';
 import { useAuth } from '../../context/AuthContext';
-import { BackIcon, ShareIcon, EditIcon, DeleteIcon, MapPinIcon, DollarIcon, CheckIcon } from '../ui/Icons';
+import { BackIcon, ShareIcon, EditIcon, DeleteIcon, MapPinIcon, DollarIcon, NoteIcon, CheckIcon } from '../ui/Icons';
 import DayTabs from '../days/DayTabs';
 import DaySpotList from '../days/DaySpotList';
 import ExpensePanel from '../expenses/ExpensePanel';
+import NotePanel from '../notes/NotePanel';
 import TripForm from './TripForm';
 import { encodeTripToUrl } from '../../utils/shareTrip';
 
-type Tab = 'spots' | 'expenses';
+type Tab = 'spots' | 'expenses' | 'notes';
 
 export default function TripDetail() {
   const { selectedTrip, setSelectedTripId, deleteTrip } = useTripContext();
@@ -95,6 +96,14 @@ export default function TripDetail() {
         >
           <DollarIcon size={12} /> Expenses
         </button>
+        <button
+          onClick={() => setActiveTab('notes')}
+          className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium -mb-px ${
+            activeTab === 'notes' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          <NoteIcon size={12} /> Notes
+        </button>
       </div>
 
       {activeTab === 'spots' ? (
@@ -104,9 +113,13 @@ export default function TripDetail() {
             <DaySpotList />
           </div>
         </>
-      ) : (
+      ) : activeTab === 'expenses' ? (
         <div className="flex-1 overflow-y-auto">
           <ExpensePanel />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto">
+          <NotePanel />
         </div>
       )}
 
