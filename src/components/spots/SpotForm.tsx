@@ -69,6 +69,11 @@ export default function SpotForm() {
   return (
     <form onSubmit={handleSubmit} className="p-3 bg-gray-50 rounded-lg mb-2 space-y-2">
       <PlaceSearch onSelect={handlePlaceSelect} />
+      <input
+        type="text" value={mapsLink} onChange={e => handleLinkChange(e.target.value)}
+        placeholder="Google Maps link (optional)"
+        className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
       {hasLocation && (
         <p className="text-[10px] text-green-600">Location set: {lat!.toFixed(4)}, {lng!.toFixed(4)}</p>
       )}
@@ -99,11 +104,6 @@ export default function SpotForm() {
         <span className="text-xs text-gray-500">Rating:</span>
         <StarRating value={rating} onChange={setRating} size="md" />
       </div>
-      <input
-        type="text" value={mapsLink} onChange={e => handleLinkChange(e.target.value)}
-        placeholder="Google Maps link (optional)"
-        className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
       <div className="flex gap-2">
         <button type="submit" disabled={!hasLocation || !name}
           className="flex-1 flex items-center justify-center gap-1 bg-green-500 text-white rounded-full py-1.5 text-xs hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
