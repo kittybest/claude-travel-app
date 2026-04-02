@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SpotCategory } from '../../types';
 import { useTripContext } from '../../context/TripContext';
-import { parseGoogleMapsUrl, isMapShortLink, resolveShortUrl } from '../../utils/parseGoogleMapsUrl';
+import { parseGoogleMapsUrl } from '../../utils/parseGoogleMapsUrl';
 import { SPOT_CATEGORIES, CURRENCIES } from '../../constants/categories';
 import { AddIcon, CancelIcon } from '../ui/Icons';
 import PlaceSearch from './PlaceSearch';
@@ -31,43 +31,17 @@ export default function SpotForm() {
     return () => window.removeEventListener('map-click', handler as EventListener);
   }, [name]);
 
-  const [resolving, setResolving] = useState(false);
-
-  const applyCoords = (coords: { lat: number; lng: number }) => {
-    setLat(coords.lat);
-    setLng(coords.lng);
-    setLinkError('');
-    window.dispatchEvent(new CustomEvent('fly-to', { detail: coords }));
-  };
-
-  const handleLinkChange = async (value: string) => {
+  const handleLinkChange = (value: string) => {
     setMapsLink(value);
     setLinkError('');
     if (!value) return;
-
-    // Try direct parsing first
     const coords = parseGoogleMapsUrl(value);
     if (coords) {
-      applyCoords(coords);
-      return;
-    }
-
-    // If it looks like a short link, try resolving
-    if (isMapShortLink(value)) {
-      setResolving(true);
-      const resolvedCoords = await resolveShortUrl(value);
-      setResolving(false);
-      if (resolvedCoords) {
-        applyCoords(resolvedCoords);
-        return;
-      }
-      setLinkError('Could not extract coordinates from this link.');
-      return;
-    }
-
-    // Looks like a map URL but couldn't parse
-    if (/google\.com\/maps/.test(value)) {
-      setLinkError('Could not extract coordinates. Try sharing the full link from the app.');
+      setLat(coords.lat);
+      setLng(coords.lng);
+      window.dispatchEvent(new CustomEvent('fly-to', { detail: coords }));
+    } else if (value.includes('google.com/maps') || value.includes('goo.gl') || value.includes('maps.app')) {
+      setLinkError('Could not extract coordinates. Try the full URL (not a shortened link).');
     }
   };
 
@@ -109,7 +83,6 @@ export default function SpotForm() {
           placeholder="Paste Google Maps link..."
           className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        {resolving && <p className="text-[10px] text-blue-500 mt-1">Resolving short link...</p>}
         {linkError && <p className="text-[10px] text-red-500 mt-1">{linkError}</p>}
       </div>
       {hasLocation && (

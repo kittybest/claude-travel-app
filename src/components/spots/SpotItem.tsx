@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Spot, SpotCategory } from '../../types';
 import { useTripContext } from '../../context/TripContext';
 import { getDayColor } from '../../constants/colors';
-import { parseGoogleMapsUrl, isMapShortLink, resolveShortUrl } from '../../utils/parseGoogleMapsUrl';
+import { parseGoogleMapsUrl } from '../../utils/parseGoogleMapsUrl';
 import { SPOT_CATEGORIES, CURRENCIES, getCategoryIcon } from '../../constants/categories';
 import { useAuth } from '../../context/AuthContext';
 import { EditIcon, DeleteIcon, SaveIcon, CancelIcon, ExternalLinkIcon } from '../ui/Icons';
@@ -42,24 +42,14 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
 
   if (!selectedTrip) return null;
 
-  const [resolvingLink, setResolvingLink] = useState(false);
-
-  const handleLinkChange = async (value: string) => {
+  const handleLinkChange = (value: string) => {
     setMapsLink(value);
     setLinkError('');
     if (!value) { setNewLat(null); setNewLng(null); return; }
     const coords = parseGoogleMapsUrl(value);
-    if (coords) { setNewLat(coords.lat); setNewLng(coords.lng); return; }
-    if (isMapShortLink(value)) {
-      setResolvingLink(true);
-      const resolvedCoords = await resolveShortUrl(value);
-      setResolvingLink(false);
-      if (resolvedCoords) { setNewLat(resolvedCoords.lat); setNewLng(resolvedCoords.lng); return; }
-      setLinkError('Could not extract coordinates from this link.');
-      return;
-    }
-    if (/google\.com\/maps/.test(value)) {
-      setLinkError('Could not extract coordinates. Try sharing the full link.');
+    if (coords) { setNewLat(coords.lat); setNewLng(coords.lng); }
+    else if (value.includes('google.com/maps') || value.includes('goo.gl') || value.includes('maps.app')) {
+      setLinkError('Could not extract coordinates. Try the full URL.');
     }
   };
 
@@ -115,7 +105,6 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
         <div>
           <input value={mapsLink} onChange={e => handleLinkChange(e.target.value)}
             placeholder="New map link (optional)" className="w-full border border-gray-300 rounded px-2 py-1" />
-          {resolvingLink && <p className="text-[10px] text-blue-500 mt-0.5">Resolving short link...</p>}
           {linkError && <p className="text-[10px] text-red-500 mt-0.5">{linkError}</p>}
           {newLat !== null && newLng !== null && (
             <p className="text-[10px] text-green-600 mt-0.5">New location: {newLat.toFixed(4)}, {newLng.toFixed(4)}</p>
