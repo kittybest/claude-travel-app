@@ -21,24 +21,26 @@ function extractCoordsFromUrl(url: string): { lat: number; lng: number } | null 
 
 /**
  * Try to extract coordinates from HTML body (Google Maps embeds coords in page data).
- * Looks for patterns like: LAT%2CLNG (URL-encoded comma) or [null,null,LAT,LNG]
+ * Prioritizes the staticmap center= pattern which always points to the target place,
+ * rather than viewport or user-location coordinates.
  */
 function extractCoordsFromHtml(html: string): { lat: number; lng: number } | null {
-  // Pattern: LAT%2CLNG (URL-encoded comma in embedded URLs)
-  // Lat range: -90 to 90, Lng range: -180 to 180
-  const encodedMatch = html.match(/(-?\d{1,2}\.\d{5,})%2C(-?\d{1,3}\.\d{5,})/);
-  if (encodedMatch) {
-    const lat = parseFloat(encodedMatch[1]);
-    const lng = parseFloat(encodedMatch[2]);
-    if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
-      return { lat, lng };
-    }
+  // Priority 1: center=LAT%2CLNG (staticmap API URL — most reliable, always the target place)
+  const centerEncodedMatch = html.match(/center=(-?\d{1,2}\.\d{5,})%2C(-?\d{1,3}\.\d{5,})/);
+  if (centerEncodedMatch) {
+    return { lat: parseFloat(centerEncodedMatch[1]), lng: parseFloat(centerEncodedMatch[2]) };
   }
 
-  // Pattern: center=LAT,LNG or ll=LAT,LNG in the HTML
-  const centerMatch = html.match(/(?:center|ll)=(-?\d{1,2}\.\d{5,}),(-?\d{1,3}\.\d{5,})/);
+  // Priority 2: center=LAT,LNG (non-encoded version)
+  const centerMatch = html.match(/center=(-?\d{1,2}\.\d{5,}),(-?\d{1,3}\.\d{5,})/);
   if (centerMatch) {
     return { lat: parseFloat(centerMatch[1]), lng: parseFloat(centerMatch[2]) };
+  }
+
+  // Priority 3: !3dLAT...!4dLNG pattern in data URLs
+  const dataMatch = html.match(/!3d(-?\d{1,2}\.\d{5,})!4d(-?\d{1,3}\.\d{5,})/);
+  if (dataMatch) {
+    return { lat: parseFloat(dataMatch[1]), lng: parseFloat(dataMatch[2]) };
   }
 
   return null;
