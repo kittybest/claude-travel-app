@@ -1,25 +1,13 @@
 /**
- * Extract lat/lng from various map URL formats:
- *
- * Google Maps:
+ * Extract lat/lng from Google Maps URL formats:
  * - https://www.google.com/maps/place/.../@37.579,126.977,17z/...
  * - https://maps.google.com/?q=37.579,126.977
  * - https://www.google.com/maps/@37.579,126.977,17z
  * - https://maps.google.com/maps?ll=37.579,126.977
  * - https://www.google.com/maps/search/37.579,126.977
- *
- * Baidu Maps:
- * - https://api.map.baidu.com/marker?location=39.915,116.404&...
- * - https://map.baidu.com?latlng=39.915,116.404
- *
- * Gaode/Amap:
- * - https://uri.amap.com/marker?position=116.404,39.915  (lng,lat order!)
- * - https://www.amap.com/search?query=...&position=116.404,39.915
  */
 export function parseGoogleMapsUrl(url: string): { lat: number; lng: number } | null {
   try {
-    // === Google Maps patterns ===
-
     // /@LAT,LNG in the path
     const atMatch = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
     if (atMatch) {
@@ -50,26 +38,6 @@ export function parseGoogleMapsUrl(url: string): { lat: number; lng: number } | 
       return { lat: parseFloat(dataMatch[1]), lng: parseFloat(dataMatch[2]) };
     }
 
-    // === Baidu Maps patterns ===
-
-    // location=LAT,LNG or latlng=LAT,LNG (Baidu API / share links)
-    if (url.includes('baidu.com')) {
-      const baiduLocMatch = url.match(/[?&](?:location|latlng)=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-      if (baiduLocMatch) {
-        return { lat: parseFloat(baiduLocMatch[1]), lng: parseFloat(baiduLocMatch[2]) };
-      }
-    }
-
-    // === Gaode/Amap patterns ===
-
-    // position=LNG,LAT (note: Gaode uses lng,lat order)
-    if (url.includes('amap.com')) {
-      const amapMatch = url.match(/[?&]position=(-?\d+\.?\d*),(-?\d+\.?\d*)/);
-      if (amapMatch) {
-        return { lat: parseFloat(amapMatch[2]), lng: parseFloat(amapMatch[1]) };
-      }
-    }
-
     return null;
   } catch {
     return null;
@@ -80,7 +48,7 @@ export function parseGoogleMapsUrl(url: string): { lat: number; lng: number } | 
  * Check if a URL looks like a map short link that could be resolved
  */
 export function isMapShortLink(url: string): boolean {
-  return /maps\.app\.goo\.gl|goo\.gl\/maps|bit\.ly|dwz\.cn|j\.map\.baidu\.com|m\.amap\.com/i.test(url);
+  return /maps\.app\.goo\.gl|goo\.gl\/maps/i.test(url);
 }
 
 /**

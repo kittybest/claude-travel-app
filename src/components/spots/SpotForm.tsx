@@ -66,7 +66,7 @@ export default function SpotForm() {
     }
 
     // Looks like a map URL but couldn't parse
-    if (/google\.com\/maps|baidu\.com|amap\.com/.test(value)) {
+    if (/google\.com\/maps/.test(value)) {
       setLinkError('Could not extract coordinates. Try sharing the full link from the app.');
     }
   };
@@ -106,7 +106,7 @@ export default function SpotForm() {
       <div>
         <input
           type="text" value={mapsLink} onChange={e => handleLinkChange(e.target.value)}
-          placeholder="Paste map link (Google / Baidu / Gaode)..."
+          placeholder="Paste Google Maps link..."
           className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         {resolving && <p className="text-[10px] text-blue-500 mt-1">Resolving short link...</p>}

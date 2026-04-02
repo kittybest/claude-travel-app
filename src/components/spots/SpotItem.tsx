@@ -58,7 +58,7 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
       setLinkError('Could not extract coordinates from this link.');
       return;
     }
-    if (/google\.com\/maps|baidu\.com|amap\.com/.test(value)) {
+    if (/google\.com\/maps/.test(value)) {
       setLinkError('Could not extract coordinates. Try sharing the full link.');
     }
   };
