@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SpotCategory } from '../../types';
 import { useTripContext } from '../../context/TripContext';
-import { parseGoogleMapsUrl } from '../../utils/parseGoogleMapsUrl';
+import { parseGoogleMapsUrl, isMapShortLink, resolveShortUrl } from '../../utils/parseGoogleMapsUrl';
 import { SPOT_CATEGORIES, CURRENCIES } from '../../constants/categories';
 import { AddIcon, CancelIcon } from '../ui/Icons';
 import PlaceSearch from './PlaceSearch';
@@ -31,17 +31,46 @@ export default function SpotForm() {
     return () => window.removeEventListener('map-click', handler as EventListener);
   }, [name]);
 
-  const handleLinkChange = (value: string) => {
+  const [resolving, setResolving] = useState(false);
+
+  const applyCoords = (coords: { lat: number; lng: number }) => {
+    setLat(coords.lat);
+    setLng(coords.lng);
+    setLinkError('');
+    window.dispatchEvent(new CustomEvent('fly-to', { detail: coords }));
+  };
+
+  const handleLinkChange = async (value: string) => {
     setMapsLink(value);
     setLinkError('');
     if (!value) return;
+
+    // Try direct parsing first
     const coords = parseGoogleMapsUrl(value);
     if (coords) {
-      setLat(coords.lat);
-      setLng(coords.lng);
-      window.dispatchEvent(new CustomEvent('fly-to', { detail: coords }));
-    } else if (value.includes('google.com/maps') || value.includes('goo.gl') || value.includes('maps.app')) {
-      setLinkError('Could not extract coordinates. Try the full URL (not a shortened link).');
+      applyCoords(coords);
+      return;
+    }
+
+    // If it looks like a short link, try resolving
+    if (isMapShortLink(value)) {
+      setResolving(true);
+      const resolved = await resolveShortUrl(value);
+      setResolving(false);
+      if (resolved) {
+        const resolvedCoords = parseGoogleMapsUrl(resolved);
+        if (resolvedCoords) {
+          applyCoords(resolvedCoords);
+          return;
+        }
+      }
+      setLinkError('Could not extract coordinates from this link.');
+      return;
+    }
+
+    // Looks like a map URL but couldn't parse
+    if (/google\.com\/maps|baidu\.com|amap\.com/.test(value)) {
+      setLinkError('Could not extract coordinates. Try sharing the full link from the app.');
     }
   };
 
@@ -80,9 +109,10 @@ export default function SpotForm() {
       <div>
         <input
           type="text" value={mapsLink} onChange={e => handleLinkChange(e.target.value)}
-          placeholder="Paste Google Maps link..."
+          placeholder="Paste map link (Google / Baidu / Gaode)..."
           className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        {resolving && <p className="text-[10px] text-blue-500 mt-1">Resolving short link...</p>}
         {linkError && <p className="text-[10px] text-red-500 mt-1">{linkError}</p>}
       </div>
       {hasLocation && (
@@ -125,7 +155,7 @@ export default function SpotForm() {
           <CancelIcon size={12} /> Cancel
         </button>
       </div>
-      <p className="text-[10px] text-gray-400 text-center">Search, paste a Google Maps link, or click on the map</p>
+      <p className="text-[10px] text-gray-400 text-center">Search, paste a map link, or click on the map</p>
     </form>
   );
 }
