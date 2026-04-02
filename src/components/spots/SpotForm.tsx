@@ -18,7 +18,6 @@ export default function SpotForm() {
   const [price, setPrice] = useState('');
   const [currency, setCurrency] = useState(selectedTrip?.defaultCurrency || 'USD');
   const [mapsLink, setMapsLink] = useState('');
-  const [linkError, setLinkError] = useState('');
 
   useEffect(() => {
     const handler = (e: CustomEvent) => {
@@ -33,7 +32,6 @@ export default function SpotForm() {
 
   const handleLinkChange = (value: string) => {
     setMapsLink(value);
-    setLinkError('');
     if (!value) return;
     // Try to extract coordinates from the link; if found, use them
     const coords = parseGoogleMapsUrl(value);
