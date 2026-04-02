@@ -35,14 +35,14 @@ export default function SpotForm() {
     setMapsLink(value);
     setLinkError('');
     if (!value) return;
+    // Try to extract coordinates from the link; if found, use them
     const coords = parseGoogleMapsUrl(value);
     if (coords) {
       setLat(coords.lat);
       setLng(coords.lng);
       window.dispatchEvent(new CustomEvent('fly-to', { detail: coords }));
-    } else if (value.includes('google.com/maps') || value.includes('goo.gl') || value.includes('maps.app')) {
-      setLinkError('Could not extract coordinates. Try the full URL (not a shortened link).');
     }
+    // No error if coords not found — link is still saved for navigation
   };
 
   const handlePlaceSelect = (result: { name: string; lat: number; lng: number }) => {
@@ -72,19 +72,6 @@ export default function SpotForm() {
   return (
     <form onSubmit={handleSubmit} className="p-3 bg-gray-50 rounded-lg mb-2 space-y-2">
       <PlaceSearch onSelect={handlePlaceSelect} />
-      <div className="flex items-center gap-2">
-        <div className="flex-1 h-px bg-gray-300" />
-        <span className="text-[10px] text-gray-400">or</span>
-        <div className="flex-1 h-px bg-gray-300" />
-      </div>
-      <div>
-        <input
-          type="text" value={mapsLink} onChange={e => handleLinkChange(e.target.value)}
-          placeholder="Paste Google Maps link..."
-          className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        {linkError && <p className="text-[10px] text-red-500 mt-1">{linkError}</p>}
-      </div>
       {hasLocation && (
         <p className="text-[10px] text-green-600">Location set: {lat!.toFixed(4)}, {lng!.toFixed(4)}</p>
       )}
@@ -115,6 +102,11 @@ export default function SpotForm() {
         <span className="text-xs text-gray-500">Rating:</span>
         <StarRating value={rating} onChange={setRating} size="md" />
       </div>
+      <input
+        type="text" value={mapsLink} onChange={e => handleLinkChange(e.target.value)}
+        placeholder="Google Maps link (optional)"
+        className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
       <div className="flex gap-2">
         <button type="submit" disabled={!hasLocation || !name}
           className="flex-1 flex items-center justify-center gap-1 bg-green-500 text-white rounded-full py-1.5 text-xs hover:bg-green-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
@@ -125,7 +117,7 @@ export default function SpotForm() {
           <CancelIcon size={12} /> Cancel
         </button>
       </div>
-      <p className="text-[10px] text-gray-400 text-center">Search, paste a map link, or click on the map</p>
+      <p className="text-[10px] text-gray-400 text-center">Search a place or click on the map to set location</p>
     </form>
   );
 }
