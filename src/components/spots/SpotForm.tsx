@@ -23,7 +23,6 @@ export default function SpotForm() {
     const handler = (e: CustomEvent) => {
       setLat(e.detail.lat);
       setLng(e.detail.lng);
-      setLinkError('');
       if (!name) setName(`Spot at ${e.detail.lat.toFixed(4)}, ${e.detail.lng.toFixed(4)}`);
     };
     window.addEventListener('map-click', handler as EventListener);
