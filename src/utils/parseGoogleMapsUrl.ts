@@ -84,14 +84,22 @@ export function isMapShortLink(url: string): boolean {
 }
 
 /**
- * Resolve a short URL via the server-side API
+ * Resolve a short URL via the server-side API.
+ * Returns coords directly if the API found them, or the resolved URL for client-side parsing.
  */
-export async function resolveShortUrl(url: string): Promise<string | null> {
+export async function resolveShortUrl(url: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const res = await fetch(`/api/resolve-url?url=${encodeURIComponent(url)}`);
     if (!res.ok) return null;
-    const { resolvedUrl } = await res.json();
-    return resolvedUrl || null;
+    const { resolvedUrl, coords } = await res.json();
+
+    // API already extracted coords (from URL or HTML)
+    if (coords) return coords;
+
+    // Try client-side parsing of the resolved URL as fallback
+    if (resolvedUrl) return parseGoogleMapsUrl(resolvedUrl);
+
+    return null;
   } catch {
     return null;
   }

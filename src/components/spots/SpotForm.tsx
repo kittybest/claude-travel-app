@@ -55,14 +55,11 @@ export default function SpotForm() {
     // If it looks like a short link, try resolving
     if (isMapShortLink(value)) {
       setResolving(true);
-      const resolved = await resolveShortUrl(value);
+      const resolvedCoords = await resolveShortUrl(value);
       setResolving(false);
-      if (resolved) {
-        const resolvedCoords = parseGoogleMapsUrl(resolved);
-        if (resolvedCoords) {
-          applyCoords(resolvedCoords);
-          return;
-        }
+      if (resolvedCoords) {
+        applyCoords(resolvedCoords);
+        return;
       }
       setLinkError('Could not extract coordinates from this link.');
       return;

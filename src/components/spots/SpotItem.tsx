@@ -52,12 +52,9 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
     if (coords) { setNewLat(coords.lat); setNewLng(coords.lng); return; }
     if (isMapShortLink(value)) {
       setResolvingLink(true);
-      const resolved = await resolveShortUrl(value);
+      const resolvedCoords = await resolveShortUrl(value);
       setResolvingLink(false);
-      if (resolved) {
-        const resolvedCoords = parseGoogleMapsUrl(resolved);
-        if (resolvedCoords) { setNewLat(resolvedCoords.lat); setNewLng(resolvedCoords.lng); return; }
-      }
+      if (resolvedCoords) { setNewLat(resolvedCoords.lat); setNewLng(resolvedCoords.lng); return; }
       setLinkError('Could not extract coordinates from this link.');
       return;
     }
