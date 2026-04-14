@@ -5,7 +5,7 @@ import { getDayColor } from '../../constants/colors';
 import { parseGoogleMapsUrl } from '../../utils/parseGoogleMapsUrl';
 import { SPOT_CATEGORIES, CURRENCIES, getCategoryIcon } from '../../constants/categories';
 import { useAuth } from '../../context/AuthContext';
-import { EditIcon, DeleteIcon, SaveIcon, CancelIcon, ExternalLinkIcon } from '../ui/Icons';
+import { EditIcon, DeleteIcon, SaveIcon, CancelIcon, ExternalLinkIcon, CopyIcon } from '../ui/Icons';
 import StarRating from './StarRating';
 
 interface Props {
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOver, onDragEnd, isDragOver, isReference, homeDayNumber }: Props) {
-  const { selectedTrip, removeSpot, updateSpot, moveSpot } = useTripContext();
+  const { selectedTrip, addSpot, removeSpot, updateSpot, moveSpot } = useTripContext();
   const { isAuthorized } = useAuth();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(spot.name);
@@ -205,6 +205,23 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
             title="Edit"
           >
             <EditIcon size={12} />
+          </button>
+          <button
+            onClick={() => addSpot(selectedTrip.id, dayNumber, {
+              name: spot.name,
+              lat: spot.lat,
+              lng: spot.lng,
+              notes: spot.notes,
+              rating: spot.rating,
+              category: spot.category,
+              price: spot.price,
+              currency: spot.currency,
+              googleMapsUrl: spot.googleMapsUrl,
+            })}
+            className="p-1 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors"
+            title="Copy to this day"
+          >
+            <CopyIcon size={12} />
           </button>
           {!isReference && (
             <button
