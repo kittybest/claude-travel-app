@@ -58,7 +58,7 @@ export default function DaySpotList() {
           No spots yet. Click "Add Spot" or click on the map.
         </p>
       ) : (
-        <div>
+        <div className="pb-16">
           {referenceSpots.map(({ spot, homeDayNumber }) => (
             <SpotItem
               key={`ref-${spot.id}`}
