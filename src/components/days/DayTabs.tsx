@@ -19,7 +19,7 @@ export default function DayTabs() {
             }`}
             style={isActive ? { backgroundColor: color } : undefined}
           >
-            Day {day.dayNumber}
+            {day.date.slice(5).replace('-', '/')} (Day{day.dayNumber})
           </button>
         );
       })}
