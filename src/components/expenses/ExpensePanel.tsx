@@ -1,10 +1,18 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTripContext } from '../../context/TripContext';
 import { SpotCategory } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { AddIcon, DeleteIcon, EditIcon, SaveIcon, CancelIcon } from '../ui/Icons';
 import { EXPENSE_CATEGORIES, CURRENCIES } from '../../constants/categories';
 import ExpenseForm from './ExpenseForm';
+
+const TWD_RATES_CACHE_KEY = 'twd-rates-cache';
+const TWD_RATES_TTL_MS = 24 * 60 * 60 * 1000;
+
+type TwdRatesCache = {
+  rates: Record<string, number>;
+  fetchedAt: number;
+};
 
 export default function ExpensePanel() {
   const { selectedTrip, removeExpense, updateExpense } = useTripContext();
@@ -16,6 +24,45 @@ export default function ExpensePanel() {
   const [editAmount, setEditAmount] = useState('');
   const [editCurrency, setEditCurrency] = useState('');
   const [editDayNumber, setEditDayNumber] = useState<string>('');
+  const [twdRates, setTwdRates] = useState<Record<string, number> | null>(null);
+
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(TWD_RATES_CACHE_KEY);
+      if (cached) {
+        const parsed: TwdRatesCache = JSON.parse(cached);
+        if (Date.now() - parsed.fetchedAt < TWD_RATES_TTL_MS && parsed.rates) {
+          setTwdRates(parsed.rates);
+          return;
+        }
+      }
+    } catch {
+      // ignore cache errors
+    }
+
+    let cancelled = false;
+    fetch('https://open.er-api.com/v6/latest/TWD')
+      .then(res => res.json())
+      .then(data => {
+        if (cancelled || !data || data.result !== 'success' || !data.rates) return;
+        setTwdRates(data.rates);
+        try {
+          localStorage.setItem(
+            TWD_RATES_CACHE_KEY,
+            JSON.stringify({ rates: data.rates, fetchedAt: Date.now() } satisfies TwdRatesCache)
+          );
+        } catch {
+          // ignore storage errors
+        }
+      })
+      .catch(() => {
+        // ignore fetch errors
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const startEditing = (e: { id: string; description: string; category: string; amount: number; currency: string; dayNumber?: number }) => {
     setEditingId(e.id);
@@ -72,6 +119,18 @@ export default function ExpensePanel() {
     totals[e.currency] = (totals[e.currency] || 0) + e.amount;
   }
 
+  let twdTotal: number | null = null;
+  if (twdRates) {
+    twdTotal = 0;
+    for (const [cur, amt] of Object.entries(totals)) {
+      if (cur === 'TWD') {
+        twdTotal += amt;
+      } else if (twdRates[cur]) {
+        twdTotal += amt / twdRates[cur];
+      }
+    }
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -90,10 +149,41 @@ export default function ExpensePanel() {
 
       {adding && <ExpenseForm onClose={() => setAdding(false)} />}
 
+      {Object.keys(summary).length > 0 && (
+        <div className="border-t border-gray-200 pt-2 space-y-1">
+          <p className="text-xs font-medium text-gray-600">By Category</p>
+          {Object.entries(summary).map(([cat, currencies]) => (
+            <div key={cat} className="flex items-center justify-between text-xs px-2">
+              <span className="text-gray-500">{cat}</span>
+              <span className="text-gray-700">
+                {Object.entries(currencies).map(([cur, amt]) => `${cur} ${amt.toFixed(2)}`).join(' + ')}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {Object.keys(totals).length > 0 && (
+        <div className="border-t border-gray-200 pt-2 space-y-1">
+          <div className="flex items-center justify-between text-xs px-2">
+            <span className="font-semibold text-gray-700">Total</span>
+            <span className="font-semibold text-gray-900">
+              {Object.entries(totals).map(([cur, amt]) => `${cur} ${amt.toFixed(2)}`).join(' + ')}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs px-2">
+            <span className="text-gray-500">≈ TWD</span>
+            <span className="text-gray-700">
+              {twdTotal != null ? twdTotal.toFixed(0) : '—'}
+            </span>
+          </div>
+        </div>
+      )}
+
       {allExpenses.length === 0 && !adding ? (
         <p className="text-gray-400 text-xs text-center py-2">No expenses yet.</p>
       ) : (
-        <div className="space-y-1">
+        <div className="space-y-1 pb-16">
           {allExpenses.map(e => (
             editingId === e.id ? (
               <div key={e.id} className="p-2 border border-gray-200 rounded text-xs space-y-2">
@@ -162,31 +252,6 @@ export default function ExpensePanel() {
               </div>
             )
           ))}
-        </div>
-      )}
-
-      {Object.keys(summary).length > 0 && (
-        <div className="border-t border-gray-200 pt-2 space-y-1">
-          <p className="text-xs font-medium text-gray-600">By Category</p>
-          {Object.entries(summary).map(([cat, currencies]) => (
-            <div key={cat} className="flex items-center justify-between text-xs px-2">
-              <span className="text-gray-500">{cat}</span>
-              <span className="text-gray-700">
-                {Object.entries(currencies).map(([cur, amt]) => `${cur} ${amt.toFixed(2)}`).join(' + ')}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {Object.keys(totals).length > 0 && (
-        <div className="border-t border-gray-200 pt-2">
-          <div className="flex items-center justify-between text-xs px-2">
-            <span className="font-semibold text-gray-700">Total</span>
-            <span className="font-semibold text-gray-900">
-              {Object.entries(totals).map(([cur, amt]) => `${cur} ${amt.toFixed(2)}`).join(' + ')}
-            </span>
-          </div>
         </div>
       )}
     </div>
