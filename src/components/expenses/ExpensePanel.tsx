@@ -153,11 +153,13 @@ export default function ExpensePanel() {
         <div className="border-t border-gray-200 pt-2 space-y-1">
           <p className="text-xs font-medium text-gray-600">By Category</p>
           {Object.entries(summary).map(([cat, currencies]) => (
-            <div key={cat} className="flex items-center justify-between text-xs px-2">
-              <span className="text-gray-500">{cat}</span>
-              <span className="text-gray-700">
-                {Object.entries(currencies).map(([cur, amt]) => `${cur} ${amt.toFixed(2)}`).join(' + ')}
-              </span>
+            <div key={cat} className="flex items-start justify-between gap-2 text-xs px-2">
+              <span className="text-gray-500 shrink-0">{cat}</span>
+              <div className="text-gray-700 text-right">
+                {Object.entries(currencies).map(([cur, amt]) => (
+                  <div key={cur}>{cur} {amt.toFixed(2)}</div>
+                ))}
+              </div>
             </div>
           ))}
         </div>
@@ -165,11 +167,13 @@ export default function ExpensePanel() {
 
       {Object.keys(totals).length > 0 && (
         <div className="border-t border-gray-200 pt-2 space-y-1">
-          <div className="flex items-center justify-between text-xs px-2">
-            <span className="font-semibold text-gray-700">Total</span>
-            <span className="font-semibold text-gray-900">
-              {Object.entries(totals).map(([cur, amt]) => `${cur} ${amt.toFixed(2)}`).join(' + ')}
-            </span>
+          <div className="flex items-start justify-between gap-2 text-xs px-2">
+            <span className="font-semibold text-gray-700 shrink-0">Total</span>
+            <div className="font-semibold text-gray-900 text-right">
+              {Object.entries(totals).map(([cur, amt]) => (
+                <div key={cur}>{cur} {amt.toFixed(2)}</div>
+              ))}
+            </div>
           </div>
           <div className="flex items-center justify-between text-xs px-2">
             <span className="text-gray-500">≈ TWD</span>
@@ -183,7 +187,7 @@ export default function ExpensePanel() {
       {allExpenses.length === 0 && !adding ? (
         <p className="text-gray-400 text-xs text-center py-2">No expenses yet.</p>
       ) : (
-        <div className="space-y-1 pb-16">
+        <div className="space-y-1 pb-16 border-t border-gray-200 pt-2">
           {allExpenses.map(e => (
             editingId === e.id ? (
               <div key={e.id} className="p-2 border border-gray-200 rounded text-xs space-y-2">
