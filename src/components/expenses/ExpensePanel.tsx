@@ -131,6 +131,26 @@ export default function ExpensePanel() {
     }
   }
 
+  const dayDateLabel: Record<number, string> = {};
+  for (const d of selectedTrip.days) {
+    const parts = d.date.split('-');
+    if (parts.length === 3) {
+      dayDateLabel[d.dayNumber] = `${parseInt(parts[1])}/${parseInt(parts[2])}`;
+    }
+  }
+
+  const groupedExpenses: { key: string; label: string; items: typeof allExpenses }[] = [];
+  for (const e of allExpenses) {
+    const key = e.dayNumber != null ? String(e.dayNumber) : 'none';
+    const label = e.dayNumber != null ? (dayDateLabel[e.dayNumber] ?? `Day ${e.dayNumber}`) : 'No date';
+    let group = groupedExpenses.find(g => g.key === key);
+    if (!group) {
+      group = { key, label, items: [] };
+      groupedExpenses.push(group);
+    }
+    group.items.push(e);
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -187,10 +207,16 @@ export default function ExpensePanel() {
       {allExpenses.length === 0 && !adding ? (
         <p className="text-gray-400 text-xs text-center py-2">No expenses yet.</p>
       ) : (
-        <div className="space-y-1 pb-16 border-t border-gray-200 pt-2">
-          {allExpenses.map(e => (
-            editingId === e.id ? (
-              <div key={e.id} className="p-2 border border-gray-200 rounded text-xs space-y-2">
+        <div className="pb-16 border-t border-gray-200 pt-2 space-y-3">
+          {groupedExpenses.map(group => (
+            <div key={group.key} className="space-y-1">
+              <div className="flex items-center gap-2 px-2">
+                <span className="text-[10px] font-medium text-gray-500">{group.label}</span>
+                <span className="flex-1 h-px bg-gray-200" />
+              </div>
+              {group.items.map(e => (
+                editingId === e.id ? (
+                  <div key={e.id} className="p-2 border border-gray-200 rounded text-xs space-y-2">
                 <input value={editDesc} onChange={ev => setEditDesc(ev.target.value)} placeholder="Description"
                   className="w-full border border-gray-300 rounded px-2 py-1" />
                 <select value={editCategory} onChange={ev => setEditCategory(ev.target.value)}
@@ -230,7 +256,6 @@ export default function ExpensePanel() {
                   <p className="text-gray-700 truncate">{e.description}</p>
                   <p className="text-[10px] text-gray-400">
                     {e.category}
-                    {e.dayNumber ? ` · Day ${e.dayNumber}` : ''}
                     {e.isFromSpot ? ' · from spot' : ''}
                   </p>
                 </div>
@@ -254,7 +279,9 @@ export default function ExpensePanel() {
                   </div>
                 )}
               </div>
-            )
+                )
+              ))}
+            </div>
           ))}
         </div>
       )}
