@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTripContext } from '../../context/TripContext';
 import { useAuth } from '../../context/AuthContext';
 import { AddIcon } from '../ui/Icons';
@@ -10,6 +10,11 @@ export default function DaySpotList() {
   const { isAuthorized } = useAuth();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (addingSpot) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [addingSpot]);
 
   if (!selectedTrip) return null;
 
@@ -37,7 +42,7 @@ export default function DaySpotList() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
+      <div className="sticky top-0 z-10 bg-white flex items-center justify-between py-1 mb-2">
         <h3 className="text-sm font-medium text-gray-700">
           Spots ({day.spots.length}{referenceSpots.length > 0 ? ` + ${referenceSpots.length}` : ''})
         </h3>
@@ -52,7 +57,6 @@ export default function DaySpotList() {
           </button>
         )}
       </div>
-      {addingSpot && <SpotForm />}
       {day.spots.length === 0 && referenceSpots.length === 0 && !addingSpot ? (
         <p className="text-gray-400 text-xs text-center py-4">
           No spots yet. Click "Add Spot" or click on the map.
@@ -85,6 +89,11 @@ export default function DaySpotList() {
               isDragOver={dragOverIndex === index && dragIndex !== index}
             />
           ))}
+          {addingSpot && (
+            <div ref={formRef} className="scroll-mt-10">
+              <SpotForm />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -161,7 +161,8 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
       onDragStart={() => isAuthorized && !isReference && onDragStart(index)}
       onDragOver={e => isAuthorized && !isReference && onDragOver(e, index)}
       onDragEnd={isAuthorized && !isReference ? onDragEnd : undefined}
-      className={`flex items-start gap-2 p-2 rounded hover:bg-gray-50 group ${isAuthorized && !isReference ? 'cursor-grab active:cursor-grabbing' : ''} transition-all ${
+      onClick={() => window.dispatchEvent(new CustomEvent('focus-spot', { detail: { id: spot.id } }))}
+      className={`flex items-start gap-2 p-2 rounded hover:bg-gray-50 group ${isAuthorized && !isReference ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} transition-all ${
         isDragOver ? 'border-t-2 border-blue-400' : 'border-t-2 border-transparent'
       } ${isReference ? 'opacity-50' : ''}`}
     >
@@ -197,7 +198,8 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
       {isAuthorized && (
         <div className="hidden group-hover:flex gap-1">
           <button
-            onClick={() => {
+            onClick={e => {
+              e.stopPropagation();
               setEndDay(spot.endDayNumber?.toString() ?? '');
               setEditing(true);
             }}
@@ -207,17 +209,20 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
             <EditIcon size={12} />
           </button>
           <button
-            onClick={() => addSpot(selectedTrip.id, dayNumber, {
-              name: spot.name,
-              lat: spot.lat,
-              lng: spot.lng,
-              notes: spot.notes,
-              rating: spot.rating,
-              category: spot.category,
-              price: spot.price,
-              currency: spot.currency,
-              googleMapsUrl: spot.googleMapsUrl,
-            })}
+            onClick={e => {
+              e.stopPropagation();
+              addSpot(selectedTrip.id, dayNumber, {
+                name: spot.name,
+                lat: spot.lat,
+                lng: spot.lng,
+                notes: spot.notes,
+                rating: spot.rating,
+                category: spot.category,
+                price: spot.price,
+                currency: spot.currency,
+                googleMapsUrl: spot.googleMapsUrl,
+              });
+            }}
             className="p-1 rounded-full bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors"
             title="Copy to this day"
           >
@@ -225,7 +230,10 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
           </button>
           {!isReference && (
             <button
-              onClick={() => removeSpot(selectedTrip.id, dayNumber, spot.id)}
+              onClick={e => {
+                e.stopPropagation();
+                removeSpot(selectedTrip.id, dayNumber, spot.id);
+              }}
               className="p-1 rounded-full bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
               title="Delete"
             >

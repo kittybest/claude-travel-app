@@ -1,4 +1,5 @@
-import { Marker, Popup } from 'react-leaflet';
+import { useEffect, useRef } from 'react';
+import { Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Spot } from '../../types';
 import { getDayColor } from '../../constants/colors';
@@ -41,9 +42,21 @@ function renderStars(rating: number) {
 export default function SpotMarker({ spot, dayNumber, orderLabel, dayRangeLabel }: Props) {
   const color = getDayColor(dayNumber);
   const icon = createColoredIcon(color, orderLabel);
+  const map = useMap();
+  const markerRef = useRef<L.Marker | null>(null);
+
+  useEffect(() => {
+    const handler = (e: CustomEvent) => {
+      if (e.detail.id !== spot.id) return;
+      map.once('moveend', () => markerRef.current?.openPopup());
+      map.flyTo([spot.lat, spot.lng], 15, { duration: 1 });
+    };
+    window.addEventListener('focus-spot', handler as EventListener);
+    return () => window.removeEventListener('focus-spot', handler as EventListener);
+  }, [map, spot.id, spot.lat, spot.lng]);
 
   return (
-    <Marker position={[spot.lat, spot.lng]} icon={icon}>
+    <Marker position={[spot.lat, spot.lng]} icon={icon} ref={markerRef}>
       <Popup>
         <div className="text-sm">
           <strong>{spot.category ? getCategoryIcon(spot.category) + ' ' : ''}{spot.name}</strong>
