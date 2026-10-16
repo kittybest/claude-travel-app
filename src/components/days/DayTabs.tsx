@@ -13,7 +13,11 @@ export default function DayTabs() {
         return (
           <button
             key={day.dayNumber}
-            onClick={() => setSelectedDayNumber(day.dayNumber)}
+            onClick={() => {
+              // Same day: state does not change, so ask the map to refit explicitly
+              if (isActive) window.dispatchEvent(new Event('refit-view'));
+              else setSelectedDayNumber(day.dayNumber);
+            }}
             className={`px-3 py-1.5 rounded text-xs font-medium whitespace-nowrap transition-all ${
               isActive ? 'text-white shadow-sm' : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
             }`}

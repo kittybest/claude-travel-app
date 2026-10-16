@@ -10,6 +10,7 @@ interface Props {
   dayNumber: number;
   orderLabel?: number;
   dayRangeLabel?: string;
+  dimmed?: boolean;
 }
 
 function createColoredIcon(color: string, label?: number) {
@@ -39,7 +40,7 @@ function renderStars(rating: number) {
   return '★'.repeat(rating) + '☆'.repeat(5 - rating);
 }
 
-export default function SpotMarker({ spot, dayNumber, orderLabel, dayRangeLabel }: Props) {
+export default function SpotMarker({ spot, dayNumber, orderLabel, dayRangeLabel, dimmed }: Props) {
   const color = getDayColor(dayNumber);
   const icon = createColoredIcon(color, orderLabel);
   const map = useMap();
@@ -56,7 +57,13 @@ export default function SpotMarker({ spot, dayNumber, orderLabel, dayRangeLabel 
   }, [map, spot.id, spot.lat, spot.lng]);
 
   return (
-    <Marker position={[spot.lat, spot.lng]} icon={icon} ref={markerRef}>
+    <Marker
+      position={[spot.lat, spot.lng]}
+      icon={icon}
+      ref={markerRef}
+      opacity={dimmed ? 0.35 : 1}
+      zIndexOffset={dimmed ? -1000 : 0}
+    >
       <Popup>
         <div className="text-sm">
           <strong>{spot.category ? getCategoryIcon(spot.category) + ' ' : ''}{spot.name}</strong>

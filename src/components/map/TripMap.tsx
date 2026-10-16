@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { toPng } from 'html-to-image';
 import { useTripContext } from '../../context/TripContext';
+import { Spot } from '../../types';
 import { getDayColor } from '../../constants/colors';
 import { ExportIcon } from '../ui/Icons';
 import SpotMarker from './SpotMarker';
@@ -11,18 +12,46 @@ import MapClickHandler from './MapClickHandler';
 import FlyToHandler from './FlyToHandler';
 import DayLegend from './DayLegend';
 
+// A spot belongs to a day if it is that day's spot or a multi-day spot spanning into it
+function isSpotInDay(spot: Spot, homeDayNumber: number, dayNumber: number) {
+  return homeDayNumber === dayNumber
+    || (!!spot.endDayNumber && homeDayNumber < dayNumber && spot.endDayNumber >= dayNumber);
+}
+
 export default function TripMap() {
-  const { selectedTrip, addingSpot } = useTripContext();
+  const { selectedTrip, selectedTripId, selectedDayNumber, activeTab, addingSpot } = useTripContext();
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  // Latest trip data, read by fitView without making spot edits trigger a refit
+  const tripRef = useRef(selectedTrip);
+  tripRef.current = selectedTrip;
+
+  const fitView = useCallback(() => {
+    const trip = tripRef.current;
+    if (!mapRef.current || !trip) return;
+    let spots: Spot[];
+    if (activeTab === 'overview') {
+      spots = trip.days.flatMap(d => d.spots);
+    } else if (activeTab === 'spots') {
+      spots = trip.days.flatMap(d => d.spots.filter(s => isSpotInDay(s, d.dayNumber, selectedDayNumber)));
+    } else {
+      return;
+    }
+    if (spots.length === 0) return;
+    const bounds = L.latLngBounds(spots.map(s => [s.lat, s.lng]));
+    mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+  }, [activeTab, selectedDayNumber]);
 
   useEffect(() => {
-    if (!mapRef.current || !selectedTrip) return;
-    const allSpots = selectedTrip.days.flatMap(d => d.spots);
-    if (allSpots.length === 0) return;
-    const bounds = L.latLngBounds(allSpots.map(s => [s.lat, s.lng]));
-    mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-  }, [selectedTrip]);
+    fitView();
+  }, [fitView, selectedTripId]);
+
+  useEffect(() => {
+    window.addEventListener('refit-view', fitView);
+    return () => window.removeEventListener('refit-view', fitView);
+  }, [fitView]);
+
+  const dimOtherDays = activeTab === 'spots';
 
   const handleExport = useCallback(async () => {
     if (!containerRef.current || !selectedTrip) return;
@@ -59,6 +88,7 @@ export default function TripMap() {
           // Only include non-multi-day spots in polyline
           const polylineSpots = day.spots.filter(s => !s.endDayNumber);
           const positions = polylineSpots.map(s => [s.lat, s.lng] as [number, number]);
+          const dayDimmed = dimOtherDays && day.dayNumber !== selectedDayNumber;
           return (
             <span key={`day-${day.dayNumber}`}>
               {positions.length >= 2 && (
@@ -67,7 +97,7 @@ export default function TripMap() {
                   pathOptions={{
                     color: getDayColor(day.dayNumber),
                     weight: 2,
-                    opacity: 0.6,
+                    opacity: dayDimmed ? 0.15 : 0.6,
                     dashArray: '6 4',
                   }}
                 />
@@ -79,6 +109,7 @@ export default function TripMap() {
                   dayNumber={day.dayNumber}
                   orderLabel={idx + 1}
                   dayRangeLabel={spot.endDayNumber ? `Day ${day.dayNumber}–${spot.endDayNumber}` : undefined}
+                  dimmed={dimOtherDays && !isSpotInDay(spot, day.dayNumber, selectedDayNumber)}
                 />
               ))}
             </span>

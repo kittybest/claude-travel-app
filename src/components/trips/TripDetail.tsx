@@ -1,24 +1,27 @@
 import { useState } from 'react';
-import { useTripContext } from '../../context/TripContext';
+import { useTripContext, TripTab } from '../../context/TripContext';
 import { useAuth } from '../../context/AuthContext';
-import { BackIcon, ShareIcon, EditIcon, DeleteIcon, MapPinIcon, DollarIcon, NoteIcon, CheckIcon } from '../ui/Icons';
+import { BackIcon, ShareIcon, EditIcon, DeleteIcon, MapPinIcon, DollarIcon, NoteIcon, CheckIcon, ListIcon } from '../ui/Icons';
 import DayTabs from '../days/DayTabs';
 import DaySpotList from '../days/DaySpotList';
 import ExpensePanel from '../expenses/ExpensePanel';
 import NotePanel from '../notes/NotePanel';
 import TripForm from './TripForm';
+import TripOverview from './TripOverview';
 import { encodeTripToUrl } from '../../utils/shareTrip';
 
-type Tab = 'spots' | 'expenses' | 'notes';
-
 export default function TripDetail() {
-  const { selectedTrip, setSelectedTripId, deleteTrip } = useTripContext();
+  const { selectedTrip, setSelectedTripId, deleteTrip, activeTab, setActiveTab, setAddingSpot } = useTripContext();
   const { isAuthorized } = useAuth();
   const [editing, setEditing] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>('spots');
 
   if (!selectedTrip) return null;
+
+  const changeTab = (tab: TripTab) => {
+    setActiveTab(tab);
+    if (tab !== 'spots') setAddingSpot(false);
+  };
 
   const handleDelete = () => {
     if (confirm(`Delete "${selectedTrip.name}"?`)) {
@@ -81,7 +84,15 @@ export default function TripDetail() {
 
       <div className="flex gap-1 mb-3 border-b border-gray-200">
         <button
-          onClick={() => setActiveTab('spots')}
+          onClick={() => changeTab('overview')}
+          className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium -mb-px ${
+            activeTab === 'overview' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          <ListIcon size={12} /> Overview
+        </button>
+        <button
+          onClick={() => changeTab('spots')}
           className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium -mb-px ${
             activeTab === 'spots' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'
           }`}
@@ -89,7 +100,7 @@ export default function TripDetail() {
           <MapPinIcon size={12} /> Spots
         </button>
         <button
-          onClick={() => setActiveTab('expenses')}
+          onClick={() => changeTab('expenses')}
           className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium -mb-px ${
             activeTab === 'expenses' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'
           }`}
@@ -97,7 +108,7 @@ export default function TripDetail() {
           <DollarIcon size={12} /> Expenses
         </button>
         <button
-          onClick={() => setActiveTab('notes')}
+          onClick={() => changeTab('notes')}
           className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium -mb-px ${
             activeTab === 'notes' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-400 hover:text-gray-600'
           }`}
@@ -106,7 +117,11 @@ export default function TripDetail() {
         </button>
       </div>
 
-      {activeTab === 'spots' ? (
+      {activeTab === 'overview' ? (
+        <div className="flex-1 overflow-y-auto">
+          <TripOverview />
+        </div>
+      ) : activeTab === 'spots' ? (
         <>
           <DayTabs />
           <div className="flex-1 overflow-y-auto mt-3">

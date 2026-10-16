@@ -2,15 +2,19 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 import { Trip, Spot, Expense, Note } from '../types';
 import { useTrips } from '../hooks/useTrips';
 
+export type TripTab = 'overview' | 'spots' | 'expenses' | 'notes';
+
 interface TripContextType {
   trips: Trip[];
   loaded: boolean;
   selectedTripId: string | null;
   selectedDayNumber: number;
   addingSpot: boolean;
+  activeTab: TripTab;
   setSelectedTripId: (id: string | null) => void;
   setSelectedDayNumber: (day: number) => void;
   setAddingSpot: (adding: boolean) => void;
+  setActiveTab: (tab: TripTab) => void;
   createTrip: (name: string, startDate: string, endDate: string, defaultCurrency?: string) => Trip;
   updateTrip: (id: string, updates: Partial<Pick<Trip, 'name' | 'startDate' | 'endDate' | 'defaultCurrency'>>) => void;
   deleteTrip: (id: string) => void;
@@ -40,13 +44,14 @@ export function TripProvider({ children }: { children: ReactNode }) {
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [selectedDayNumber, setSelectedDayNumber] = useState(1);
   const [addingSpot, setAddingSpot] = useState(false);
+  const [activeTab, setActiveTab] = useState<TripTab>('overview');
 
   const selectedTrip = trips.find(t => t.id === selectedTripId);
 
   return (
     <TripContext.Provider value={{
-      trips, loaded, selectedTripId, selectedDayNumber, addingSpot,
-      setSelectedTripId, setSelectedDayNumber, setAddingSpot,
+      trips, loaded, selectedTripId, selectedDayNumber, addingSpot, activeTab,
+      setSelectedTripId, setSelectedDayNumber, setAddingSpot, setActiveTab,
       createTrip, updateTrip, deleteTrip,
       addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
       addExpense, updateExpense, removeExpense,

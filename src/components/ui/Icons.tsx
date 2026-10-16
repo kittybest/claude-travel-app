@@ -129,6 +129,8 @@ export function UnlockIcon(props: IconProps) {
   );
 }
 
+export function ListIcon(props: IconProps) { return svg(props, 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01'); }
+
 export function NoteIcon(props: IconProps) {
   return (
     <svg width={props.size ?? 14} height={props.size ?? 14} viewBox="0 0 24 24" fill="none"
