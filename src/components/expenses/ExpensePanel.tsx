@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTripContext, useCanEdit } from '../../context/TripContext';
 import { SpotCategory } from '../../types';
 import { AddIcon, DeleteIcon, EditIcon, SaveIcon, CancelIcon } from '../ui/Icons';
@@ -24,6 +24,11 @@ export default function ExpensePanel() {
   const [editCurrency, setEditCurrency] = useState('');
   const [editDayNumber, setEditDayNumber] = useState<string>('');
   const [twdRates, setTwdRates] = useState<Record<string, number> | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (adding) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [adding]);
 
   useEffect(() => {
     try {
@@ -152,7 +157,7 @@ export default function ExpensePanel() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-white flex items-center justify-between py-1">
         <h3 className="text-sm font-medium text-gray-700">Expenses</h3>
         {canEdit && !adding && (
           <button
@@ -166,7 +171,11 @@ export default function ExpensePanel() {
         )}
       </div>
 
-      {adding && <ExpenseForm onClose={() => setAdding(false)} />}
+      {adding && (
+        <div ref={formRef} className="scroll-mt-10">
+          <ExpenseForm onClose={() => setAdding(false)} />
+        </div>
+      )}
 
       {Object.keys(summary).length > 0 && (
         <div className="border-t border-gray-200 pt-2 space-y-1">

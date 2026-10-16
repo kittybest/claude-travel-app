@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTripContext, useCanEdit } from '../../context/TripContext';
 import { AddIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, ExternalLinkIcon } from '../ui/Icons';
 
@@ -11,6 +11,11 @@ export default function NotePanel() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [editLink, setEditLink] = useState('');
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (adding) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [adding]);
 
   if (!selectedTrip) return null;
 
@@ -44,7 +49,7 @@ export default function NotePanel() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="sticky top-0 z-10 bg-white flex items-center justify-between py-1">
         <h3 className="text-sm font-medium text-gray-700">Notes</h3>
         {canEdit && !adding && (
           <button
@@ -58,36 +63,10 @@ export default function NotePanel() {
         )}
       </div>
 
-      {adding && (
-        <div className="p-3 bg-gray-50 rounded-lg mb-2 space-y-2">
-          <input
-            type="text" value={newText} onChange={e => setNewText(e.target.value)}
-            placeholder="Note text"
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onKeyDown={e => e.key === 'Enter' && handleAdd()}
-          />
-          <input
-            type="url" value={newLink} onChange={e => setNewLink(e.target.value)}
-            placeholder="Link (optional)"
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <div className="flex gap-2">
-            <button onClick={handleAdd}
-              className="flex-1 flex items-center justify-center gap-1 bg-green-500 text-white rounded-full py-1.5 text-xs hover:bg-green-600 transition-colors">
-              <AddIcon size={12} /> Add
-            </button>
-            <button onClick={() => { setAdding(false); setNewText(''); setNewLink(''); }}
-              className="flex-1 flex items-center justify-center gap-1 bg-gray-200 text-gray-600 rounded-full py-1.5 text-xs hover:bg-gray-300 transition-colors">
-              <CancelIcon size={12} /> Cancel
-            </button>
-          </div>
-        </div>
-      )}
-
       {notes.length === 0 && !adding ? (
         <p className="text-gray-400 text-xs text-center py-2">No notes yet.</p>
       ) : (
-        <div className="space-y-1">
+        <div className="pb-16 space-y-1">
           {notes.map(note => (
             editingId === note.id ? (
               <div key={note.id} className="p-2 border border-gray-200 rounded text-xs space-y-2">
@@ -142,6 +121,31 @@ export default function NotePanel() {
               </div>
             )
           ))}
+          {adding && (
+            <div ref={formRef} className="scroll-mt-10 p-3 bg-gray-50 rounded-lg mb-2 space-y-2">
+              <input
+                type="text" value={newText} onChange={e => setNewText(e.target.value)}
+                placeholder="Note text"
+                className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyDown={e => e.key === 'Enter' && handleAdd()}
+              />
+              <input
+                type="url" value={newLink} onChange={e => setNewLink(e.target.value)}
+                placeholder="Link (optional)"
+                className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <div className="flex gap-2">
+                <button onClick={handleAdd}
+                  className="flex-1 flex items-center justify-center gap-1 bg-green-500 text-white rounded-full py-1.5 text-xs hover:bg-green-600 transition-colors">
+                  <AddIcon size={12} /> Add
+                </button>
+                <button onClick={() => { setAdding(false); setNewText(''); setNewLink(''); }}
+                  className="flex-1 flex items-center justify-center gap-1 bg-gray-200 text-gray-600 rounded-full py-1.5 text-xs hover:bg-gray-300 transition-colors">
+                  <CancelIcon size={12} /> Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

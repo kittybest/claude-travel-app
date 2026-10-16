@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ReactNode } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { TripProvider, SharedTripProvider, useTripContext } from './context/TripContext';
 import Sidebar from './components/layout/Sidebar';
@@ -44,6 +44,23 @@ function AuthButton() {
   );
 }
 
+// On mobile, Expenses and Notes take the full screen and hide the map
+function TripLayout({ sidebar }: { sidebar: ReactNode }) {
+  const { selectedTrip, activeTab } = useTripContext();
+  const mapHidden = !!selectedTrip && (activeTab === 'expenses' || activeTab === 'notes');
+
+  return (
+    <div className="flex flex-col md:flex-row h-full">
+      <Sidebar fullHeight={mapHidden}>
+        {sidebar}
+      </Sidebar>
+      <MainContent hiddenOnMobile={mapHidden}>
+        <TripMap />
+      </MainContent>
+    </div>
+  );
+}
+
 function AppContent() {
   const { selectedTripId } = useTripContext();
   const [sharedTrip, setSharedTrip] = useState<Trip | null>(null);
@@ -65,28 +82,12 @@ function AppContent() {
   if (sharedTrip) {
     return (
       <SharedTripProvider key={sharedTrip.id} trip={sharedTrip}>
-        <div className="flex flex-col md:flex-row h-full">
-          <Sidebar>
-            <TripDetail />
-          </Sidebar>
-          <MainContent>
-            <TripMap />
-          </MainContent>
-        </div>
+        <TripLayout sidebar={<TripDetail />} />
       </SharedTripProvider>
     );
   }
 
-  return (
-    <div className="flex flex-col md:flex-row h-full">
-      <Sidebar>
-        {selectedTripId ? <TripDetail /> : <TripList />}
-      </Sidebar>
-      <MainContent>
-        <TripMap />
-      </MainContent>
-    </div>
-  );
+  return <TripLayout sidebar={selectedTripId ? <TripDetail /> : <TripList />} />;
 }
 
 export default function App() {

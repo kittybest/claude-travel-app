@@ -13,6 +13,8 @@ export default function FitViewHandler() {
   tripRef.current = selectedTrip;
 
   const fitView = useCallback(() => {
+    // The map may have been hidden on mobile; re-measure before fitting
+    map.invalidateSize();
     const trip = tripRef.current;
     if (!trip) return;
     let spots: Spot[];

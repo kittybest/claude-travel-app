@@ -131,6 +131,12 @@ export function UnlockIcon(props: IconProps) {
 
 export function ListIcon(props: IconProps) { return svg(props, 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01'); }
 
+export function ChevronDownIcon(props: IconProps) { return svg(props, 'M6 9l6 6 6-6'); }
+
+export function ChevronUpIcon(props: IconProps) { return svg(props, 'M18 15l-6-6-6 6'); }
+
+export function LayersIcon(props: IconProps) { return svg(props, 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5'); }
+
 export function NoteIcon(props: IconProps) {
   return (
     <svg width={props.size ?? 14} height={props.size ?? 14} viewBox="0 0 24 24" fill="none"
