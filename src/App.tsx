@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { TripProvider, useTripContext } from './context/TripContext';
+import { TripProvider, SharedTripProvider, useTripContext } from './context/TripContext';
 import Sidebar from './components/layout/Sidebar';
 import MainContent from './components/layout/MainContent';
 import TripList from './components/trips/TripList';
 import TripDetail from './components/trips/TripDetail';
-import SharedTripView from './components/trips/SharedTripView';
 import TripMap from './components/map/TripMap';
-import SharedTripMap from './components/map/SharedTripMap';
 import LoginModal from './components/auth/LoginModal';
 import { LockIcon, UnlockIcon } from './components/ui/Icons';
 import { fixLeafletIcons } from './utils/leafletSetup';
@@ -66,14 +64,16 @@ function AppContent() {
 
   if (sharedTrip) {
     return (
-      <div className="flex flex-col md:flex-row h-full">
-        <Sidebar>
-          <SharedTripView trip={sharedTrip} />
-        </Sidebar>
-        <MainContent>
-          <SharedTripMap trip={sharedTrip} />
-        </MainContent>
-      </div>
+      <SharedTripProvider key={sharedTrip.id} trip={sharedTrip}>
+        <div className="flex flex-col md:flex-row h-full">
+          <Sidebar>
+            <TripDetail />
+          </Sidebar>
+          <MainContent>
+            <TripMap />
+          </MainContent>
+        </div>
+      </SharedTripProvider>
     );
   }
 

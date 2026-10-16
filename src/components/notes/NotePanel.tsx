@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { useTripContext } from '../../context/TripContext';
-import { useAuth } from '../../context/AuthContext';
+import { useTripContext, useCanEdit } from '../../context/TripContext';
 import { AddIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, ExternalLinkIcon } from '../ui/Icons';
 
 export default function NotePanel() {
   const { selectedTrip, addNote, updateNote, removeNote } = useTripContext();
-  const { isAuthorized } = useAuth();
+  const canEdit = useCanEdit();
   const [adding, setAdding] = useState(false);
   const [newText, setNewText] = useState('');
   const [newLink, setNewLink] = useState('');
@@ -47,7 +46,7 @@ export default function NotePanel() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">Notes</h3>
-        {isAuthorized && !adding && (
+        {canEdit && !adding && (
           <button
             onClick={() => setAdding(true)}
             className="flex items-center gap-1 bg-green-500 text-white text-xs px-2.5 py-1 rounded-full hover:bg-green-600 transition-colors"
@@ -126,7 +125,7 @@ export default function NotePanel() {
                     <p className="text-gray-700 truncate">{note.text}</p>
                   )}
                 </div>
-                {isAuthorized && (
+                {canEdit && (
                   <div className="hidden group-hover:flex gap-1">
                     <button onClick={() => startEditing(note)}
                       className="p-1 rounded-full bg-cyan-50 text-cyan-500 hover:bg-cyan-100 transition-colors"

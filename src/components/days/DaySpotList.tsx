@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { useTripContext } from '../../context/TripContext';
-import { useAuth } from '../../context/AuthContext';
+import { useTripContext, useCanEdit } from '../../context/TripContext';
 import { AddIcon } from '../ui/Icons';
 import SpotItem from '../spots/SpotItem';
 import SpotForm from '../spots/SpotForm';
 
 export default function DaySpotList() {
   const { selectedTrip, selectedDayNumber, addingSpot, setAddingSpot, reorderSpots } = useTripContext();
-  const { isAuthorized } = useAuth();
+  const canEdit = useCanEdit();
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
@@ -46,7 +45,7 @@ export default function DaySpotList() {
         <h3 className="text-sm font-medium text-gray-700">
           Spots ({day.spots.length}{referenceSpots.length > 0 ? ` + ${referenceSpots.length}` : ''})
         </h3>
-        {isAuthorized && !addingSpot && (
+        {canEdit && !addingSpot && (
           <button
             onClick={() => setAddingSpot(true)}
             className="flex items-center gap-1 bg-green-500 text-white text-xs px-2.5 py-1 rounded-full hover:bg-green-600 transition-colors"

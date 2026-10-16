@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useTripContext } from '../../context/TripContext';
+import { useTripContext, useCanEdit } from '../../context/TripContext';
 import { SpotCategory } from '../../types';
-import { useAuth } from '../../context/AuthContext';
 import { AddIcon, DeleteIcon, EditIcon, SaveIcon, CancelIcon } from '../ui/Icons';
 import { EXPENSE_CATEGORIES, CURRENCIES } from '../../constants/categories';
 import ExpenseForm from './ExpenseForm';
@@ -16,7 +15,7 @@ type TwdRatesCache = {
 
 export default function ExpensePanel() {
   const { selectedTrip, removeExpense, updateExpense } = useTripContext();
-  const { isAuthorized } = useAuth();
+  const canEdit = useCanEdit();
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDesc, setEditDesc] = useState('');
@@ -155,7 +154,7 @@ export default function ExpensePanel() {
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-medium text-gray-700">Expenses</h3>
-        {isAuthorized && !adding && (
+        {canEdit && !adding && (
           <button
             onClick={() => setAdding(true)}
             className="flex items-center gap-1 bg-green-500 text-white text-xs px-2.5 py-1 rounded-full hover:bg-green-600 transition-colors"
@@ -260,7 +259,7 @@ export default function ExpensePanel() {
                   </p>
                 </div>
                 <span className="text-gray-600 font-medium whitespace-nowrap">{e.currency} {e.amount.toFixed(2)}</span>
-                {isAuthorized && !e.isFromSpot && (
+                {canEdit && !e.isFromSpot && (
                   <div className="hidden group-hover:flex gap-1">
                     <button
                       onClick={() => startEditing(e)}

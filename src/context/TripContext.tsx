@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { Trip, Spot, Expense, Note } from '../types';
 import { useTrips } from '../hooks/useTrips';
+import { useAuth } from './AuthContext';
 
 export type TripTab = 'overview' | 'spots' | 'expenses' | 'notes';
 
@@ -11,6 +12,7 @@ interface TripContextType {
   selectedDayNumber: number;
   addingSpot: boolean;
   activeTab: TripTab;
+  readOnly: boolean;
   setSelectedTripId: (id: string | null) => void;
   setSelectedDayNumber: (day: number) => void;
   setAddingSpot: (adding: boolean) => void;
@@ -50,7 +52,7 @@ export function TripProvider({ children }: { children: ReactNode }) {
 
   return (
     <TripContext.Provider value={{
-      trips, loaded, selectedTripId, selectedDayNumber, addingSpot, activeTab,
+      trips, loaded, selectedTripId, selectedDayNumber, addingSpot, activeTab, readOnly: false,
       setSelectedTripId, setSelectedDayNumber, setAddingSpot, setActiveTab,
       createTrip, updateTrip, deleteTrip,
       addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
@@ -63,8 +65,36 @@ export function TripProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const noop = () => {};
+
+// Read-only context for a trip opened from a share link
+export function SharedTripProvider({ trip, children }: { trip: Trip; children: ReactNode }) {
+  const [selectedDayNumber, setSelectedDayNumber] = useState(1);
+  const [activeTab, setActiveTab] = useState<TripTab>('overview');
+
+  return (
+    <TripContext.Provider value={{
+      trips: [trip], loaded: true, selectedTripId: trip.id, selectedDayNumber, addingSpot: false, activeTab, readOnly: true,
+      setSelectedTripId: noop, setSelectedDayNumber, setAddingSpot: noop, setActiveTab,
+      createTrip: () => trip, updateTrip: noop, deleteTrip: noop,
+      addSpot: noop, updateSpot: noop, removeSpot: noop, reorderSpots: noop, moveSpot: noop,
+      addExpense: noop, updateExpense: noop, removeExpense: noop,
+      addNote: noop, updateNote: noop, removeNote: noop,
+      selectedTrip: trip,
+    }}>
+      {children}
+    </TripContext.Provider>
+  );
+}
+
 export function useTripContext() {
   const ctx = useContext(TripContext);
   if (!ctx) throw new Error('useTripContext must be used within TripProvider');
   return ctx;
+}
+
+export function useCanEdit() {
+  const { isAuthorized } = useAuth();
+  const { readOnly } = useTripContext();
+  return isAuthorized && !readOnly;
 }

@@ -1,55 +1,20 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, Polyline } from 'react-leaflet';
-import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { toPng } from 'html-to-image';
 import { useTripContext } from '../../context/TripContext';
-import { Spot } from '../../types';
 import { getDayColor } from '../../constants/colors';
 import { ExportIcon } from '../ui/Icons';
 import SpotMarker from './SpotMarker';
 import MapClickHandler from './MapClickHandler';
 import FlyToHandler from './FlyToHandler';
+import FitViewHandler from './FitViewHandler';
 import DayLegend from './DayLegend';
-
-// A spot belongs to a day if it is that day's spot or a multi-day spot spanning into it
-function isSpotInDay(spot: Spot, homeDayNumber: number, dayNumber: number) {
-  return homeDayNumber === dayNumber
-    || (!!spot.endDayNumber && homeDayNumber < dayNumber && spot.endDayNumber >= dayNumber);
-}
+import { isSpotInDay } from '../../utils/spots';
 
 export default function TripMap() {
-  const { selectedTrip, selectedTripId, selectedDayNumber, activeTab, addingSpot } = useTripContext();
-  const mapRef = useRef<L.Map | null>(null);
+  const { selectedTrip, selectedDayNumber, activeTab, addingSpot } = useTripContext();
   const containerRef = useRef<HTMLDivElement | null>(null);
-  // Latest trip data, read by fitView without making spot edits trigger a refit
-  const tripRef = useRef(selectedTrip);
-  tripRef.current = selectedTrip;
-
-  const fitView = useCallback(() => {
-    const trip = tripRef.current;
-    if (!mapRef.current || !trip) return;
-    let spots: Spot[];
-    if (activeTab === 'overview') {
-      spots = trip.days.flatMap(d => d.spots);
-    } else if (activeTab === 'spots') {
-      spots = trip.days.flatMap(d => d.spots.filter(s => isSpotInDay(s, d.dayNumber, selectedDayNumber)));
-    } else {
-      return;
-    }
-    if (spots.length === 0) return;
-    const bounds = L.latLngBounds(spots.map(s => [s.lat, s.lng]));
-    mapRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-  }, [activeTab, selectedDayNumber]);
-
-  useEffect(() => {
-    fitView();
-  }, [fitView, selectedTripId]);
-
-  useEffect(() => {
-    window.addEventListener('refit-view', fitView);
-    return () => window.removeEventListener('refit-view', fitView);
-  }, [fitView]);
 
   const dimOtherDays = activeTab === 'spots';
 
@@ -75,7 +40,6 @@ export default function TripMap() {
         center={[35.6762, 139.6503]}
         zoom={3}
         className="w-full h-full"
-        ref={mapRef}
         style={{ cursor: addingSpot ? 'crosshair' : '' }}
       >
         <TileLayer
@@ -84,6 +48,7 @@ export default function TripMap() {
         />
         <MapClickHandler />
         <FlyToHandler />
+        <FitViewHandler />
         {selectedTrip?.days.map(day => {
           // Only include non-multi-day spots in polyline
           const polylineSpots = day.spots.filter(s => !s.endDayNumber);

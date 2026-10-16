@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Spot, SpotCategory } from '../../types';
-import { useTripContext } from '../../context/TripContext';
+import { useTripContext, useCanEdit } from '../../context/TripContext';
 import { getDayColor } from '../../constants/colors';
 import { parseGoogleMapsUrl } from '../../utils/parseGoogleMapsUrl';
 import { SPOT_CATEGORIES, CURRENCIES, getCategoryIcon } from '../../constants/categories';
-import { useAuth } from '../../context/AuthContext';
 import { EditIcon, DeleteIcon, SaveIcon, CancelIcon, ExternalLinkIcon, CopyIcon } from '../ui/Icons';
 import StarRating from './StarRating';
 
@@ -22,7 +21,7 @@ interface Props {
 
 export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOver, onDragEnd, isDragOver, isReference, homeDayNumber }: Props) {
   const { selectedTrip, addSpot, removeSpot, updateSpot, moveSpot } = useTripContext();
-  const { isAuthorized } = useAuth();
+  const canEdit = useCanEdit();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(spot.name);
   const [notes, setNotes] = useState(spot.notes ?? '');
@@ -157,12 +156,12 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
 
   return (
     <div
-      draggable={isAuthorized && !isReference}
-      onDragStart={() => isAuthorized && !isReference && onDragStart(index)}
-      onDragOver={e => isAuthorized && !isReference && onDragOver(e, index)}
-      onDragEnd={isAuthorized && !isReference ? onDragEnd : undefined}
+      draggable={canEdit && !isReference}
+      onDragStart={() => canEdit && !isReference && onDragStart(index)}
+      onDragOver={e => canEdit && !isReference && onDragOver(e, index)}
+      onDragEnd={canEdit && !isReference ? onDragEnd : undefined}
       onClick={() => window.dispatchEvent(new CustomEvent('focus-spot', { detail: { id: spot.id } }))}
-      className={`flex items-start gap-2 p-2 rounded hover:bg-gray-50 group ${isAuthorized && !isReference ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} transition-all ${
+      className={`flex items-start gap-2 p-2 rounded hover:bg-gray-50 group ${canEdit && !isReference ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'} transition-all ${
         isDragOver ? 'border-t-2 border-blue-400' : 'border-t-2 border-transparent'
       } ${isReference ? 'opacity-50' : ''}`}
     >
@@ -195,7 +194,7 @@ export default function SpotItem({ spot, dayNumber, index, onDragStart, onDragOv
           <ExternalLinkIcon size={9} /> Google Maps
         </a>
       </div>
-      {isAuthorized && (
+      {canEdit && (
         <div className="hidden group-hover:flex gap-1">
           <button
             onClick={e => {

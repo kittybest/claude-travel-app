@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useTripContext, TripTab } from '../../context/TripContext';
-import { useAuth } from '../../context/AuthContext';
+import { useTripContext, useCanEdit, TripTab } from '../../context/TripContext';
 import { BackIcon, ShareIcon, EditIcon, DeleteIcon, MapPinIcon, DollarIcon, NoteIcon, CheckIcon, ListIcon } from '../ui/Icons';
 import DayTabs from '../days/DayTabs';
 import DaySpotList from '../days/DaySpotList';
@@ -11,8 +10,8 @@ import TripOverview from './TripOverview';
 import { encodeTripToUrl } from '../../utils/shareTrip';
 
 export default function TripDetail() {
-  const { selectedTrip, setSelectedTripId, deleteTrip, activeTab, setActiveTab, setAddingSpot } = useTripContext();
-  const { isAuthorized } = useAuth();
+  const { selectedTrip, setSelectedTripId, deleteTrip, activeTab, setActiveTab, setAddingSpot, readOnly } = useTripContext();
+  const canEdit = useCanEdit();
   const [editing, setEditing] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -44,24 +43,30 @@ export default function TripDetail() {
   return (
     <div className="p-4 flex flex-col h-full">
       <div className="flex items-center gap-2 mb-3">
-        <button
-          onClick={() => setSelectedTripId(null)}
-          className="p-1.5 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors"
-          title="Back"
-        >
-          <BackIcon size={14} />
-        </button>
+        {!readOnly && (
+          <button
+            onClick={() => setSelectedTripId(null)}
+            className="p-1.5 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-700 transition-colors"
+            title="Back"
+          >
+            <BackIcon size={14} />
+          </button>
+        )}
         <h2 className="text-lg font-bold text-gray-900 flex-1 truncate">{selectedTrip.name}</h2>
-        <button
-          onClick={handleShare}
-          className={`p-1.5 rounded-full transition-colors ${
-            copied ? 'bg-green-100 text-green-600' : 'bg-emerald-50 text-emerald-500 hover:bg-emerald-100'
-          }`}
-          title={copied ? 'Copied!' : 'Share'}
-        >
-          {copied ? <CheckIcon size={14} /> : <ShareIcon size={14} />}
-        </button>
-        {isAuthorized && (
+        {readOnly ? (
+          <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full">Shared</span>
+        ) : (
+          <button
+            onClick={handleShare}
+            className={`p-1.5 rounded-full transition-colors ${
+              copied ? 'bg-green-100 text-green-600' : 'bg-emerald-50 text-emerald-500 hover:bg-emerald-100'
+            }`}
+            title={copied ? 'Copied!' : 'Share'}
+          >
+            {copied ? <CheckIcon size={14} /> : <ShareIcon size={14} />}
+          </button>
+        )}
+        {canEdit && (
           <>
             <button
               onClick={() => setEditing(true)}
