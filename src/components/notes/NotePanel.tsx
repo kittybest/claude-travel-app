@@ -1,16 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTripContext, useCanEdit } from '../../context/TripContext';
-import { AddIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon, ExternalLinkIcon } from '../ui/Icons';
+import { AddIcon, EditIcon, DeleteIcon, SaveIcon, CancelIcon } from '../ui/Icons';
+import LinkifiedText from '../ui/LinkifiedText';
 
 export default function NotePanel() {
   const { selectedTrip, addNote, updateNote, removeNote } = useTripContext();
   const canEdit = useCanEdit();
   const [adding, setAdding] = useState(false);
   const [newText, setNewText] = useState('');
-  const [newLink, setNewLink] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
-  const [editLink, setEditLink] = useState('');
   const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,24 +24,20 @@ export default function NotePanel() {
     if (!newText.trim()) return;
     addNote(selectedTrip.id, {
       text: newText.trim(),
-      link: newLink.trim() || undefined,
     });
     setNewText('');
-    setNewLink('');
     setAdding(false);
   };
 
-  const startEditing = (note: { id: string; text: string; link?: string }) => {
+  const startEditing = (note: { id: string; text: string }) => {
     setEditingId(note.id);
     setEditText(note.text);
-    setEditLink(note.link || '');
   };
 
   const handleSaveEdit = () => {
     if (!editingId || !editText.trim()) return;
     updateNote(selectedTrip.id, editingId, {
       text: editText.trim(),
-      link: editLink.trim() || undefined,
     });
     setEditingId(null);
   };
@@ -70,13 +65,9 @@ export default function NotePanel() {
           {notes.map(note => (
             editingId === note.id ? (
               <div key={note.id} className="p-2 border border-gray-200 rounded text-xs space-y-2">
-                <input value={editText} onChange={e => setEditText(e.target.value)}
+                <textarea value={editText} onChange={e => setEditText(e.target.value)}
                   placeholder="Note text"
-                  className="w-full border border-gray-300 rounded px-2 py-1"
-                  onKeyDown={e => e.key === 'Enter' && handleSaveEdit()}
-                />
-                <input value={editLink} onChange={e => setEditLink(e.target.value)}
-                  placeholder="Link (optional)"
+                  rows={3}
                   className="w-full border border-gray-300 rounded px-2 py-1"
                 />
                 <div className="flex gap-1.5">
@@ -91,18 +82,12 @@ export default function NotePanel() {
                 </div>
               </div>
             ) : (
-              <div key={note.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-gray-50 group text-xs">
-                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-purple-400" />
+              <div key={note.id} className="flex items-start gap-2 px-2 py-1.5 rounded hover:bg-gray-50 group text-xs">
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-purple-400 mt-1.5" />
                 <div className="flex-1 min-w-0">
-                  {note.link ? (
-                    <a href={note.link} target="_blank" rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700 hover:underline flex items-center gap-1">
-                      <span className="truncate">{note.text}</span>
-                      <ExternalLinkIcon size={10} className="flex-shrink-0" />
-                    </a>
-                  ) : (
-                    <p className="text-gray-700 truncate">{note.text}</p>
-                  )}
+                  <p className="text-gray-700 whitespace-pre-wrap break-words">
+                    <LinkifiedText text={note.text} />
+                  </p>
                 </div>
                 {canEdit && (
                   <div className="hidden group-hover:flex gap-1">
@@ -123,15 +108,10 @@ export default function NotePanel() {
           ))}
           {adding && (
             <div ref={formRef} className="scroll-mt-10 p-3 bg-gray-50 rounded-lg mb-2 space-y-2">
-              <input
-                type="text" value={newText} onChange={e => setNewText(e.target.value)}
+              <textarea
+                value={newText} onChange={e => setNewText(e.target.value)}
                 placeholder="Note text"
-                className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
-                onKeyDown={e => e.key === 'Enter' && handleAdd()}
-              />
-              <input
-                type="url" value={newLink} onChange={e => setNewLink(e.target.value)}
-                placeholder="Link (optional)"
+                rows={3}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <div className="flex gap-2">
@@ -139,7 +119,7 @@ export default function NotePanel() {
                   className="flex-1 flex items-center justify-center gap-1 bg-green-500 text-white rounded-full py-1.5 text-xs hover:bg-green-600 transition-colors">
                   <AddIcon size={12} /> Add
                 </button>
-                <button onClick={() => { setAdding(false); setNewText(''); setNewLink(''); }}
+                <button onClick={() => { setAdding(false); setNewText(''); }}
                   className="flex-1 flex items-center justify-center gap-1 bg-gray-200 text-gray-600 rounded-full py-1.5 text-xs hover:bg-gray-300 transition-colors">
                   <CancelIcon size={12} /> Cancel
                 </button>

@@ -3,6 +3,7 @@ import { useTripContext, useCanEdit } from '../../context/TripContext';
 import { getDayColor } from '../../constants/colors';
 import { Day } from '../../types';
 import { ChevronDownIcon, ChevronUpIcon, EditIcon, SaveIcon, CancelIcon } from '../ui/Icons';
+import LinkifiedText from '../ui/LinkifiedText';
 
 export default function TripOverview() {
   const {
@@ -44,9 +45,7 @@ export default function TripOverview() {
         const first = day.spots[0];
         const last = day.spots[day.spots.length - 1];
         const startEnd = first ? (first === last ? first.name : `${first.name} -> ${last.name}`) : '';
-        // When expanded without a title, the full route below replaces the start/end summary
-        const summary = day.title || (!expanded && startEnd);
-        const route = day.spots.map(s => s.name).join(' -> ');
+        const summary = day.title || startEnd;
 
         return (
           <div key={day.dayNumber} className={`rounded ${expanded ? 'bg-gray-50' : ''}`}>
@@ -115,9 +114,10 @@ export default function TripOverview() {
                   </>
                 ) : (
                   <>
-                    {route && <p className="text-gray-500">{route}</p>}
                     {day.journal ? (
-                      <p className="text-gray-700 whitespace-pre-wrap border-t border-gray-200 pt-2">{day.journal}</p>
+                      <p className="text-gray-700 whitespace-pre-wrap break-words border-t border-gray-200 pt-2">
+                        <LinkifiedText text={day.journal} />
+                      </p>
                     ) : canEdit && (
                       <p className="text-gray-400 border-t border-gray-200 pt-2">No journal yet.</p>
                     )}

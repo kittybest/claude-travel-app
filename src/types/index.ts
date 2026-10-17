@@ -34,7 +34,6 @@ export interface Expense {
 export interface Note {
   id: string;
   text: string;
-  link?: string;
 }
 
 export interface Trip {
