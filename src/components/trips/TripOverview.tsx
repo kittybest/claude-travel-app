@@ -82,10 +82,7 @@ export default function TripOverview() {
                     <input
                       value={editTitle}
                       onChange={e => setEditTitle(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') handleSave(day.dayNumber);
-                        if (e.key === 'Escape') setEditing(false);
-                      }}
+                      onKeyDown={e => e.key === 'Escape' && setEditing(false)}
                       placeholder="Title"
                       className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
