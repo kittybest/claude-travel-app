@@ -6,7 +6,7 @@ import TripCard from './TripCard';
 import TripForm from './TripForm';
 
 export default function TripList() {
-  const { trips, loaded, selectedTripId, setSelectedTripId, setSelectedDayNumber, setActiveTab } = useTripContext();
+  const { trips, loaded, selectedTripId, setSelectedTripId, setSelectedDayNumber, setActiveTab, setOverviewExpanded } = useTripContext();
   const { isAuthorized } = useAuth();
   const [showForm, setShowForm] = useState(false);
 
@@ -14,6 +14,7 @@ export default function TripList() {
     setSelectedTripId(id);
     setSelectedDayNumber(1);
     setActiveTab('overview');
+    setOverviewExpanded(false);
   };
 
   return (

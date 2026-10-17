@@ -10,13 +10,13 @@ import MapClickHandler from './MapClickHandler';
 import FlyToHandler from './FlyToHandler';
 import FitViewHandler from './FitViewHandler';
 import DayLegend from './DayLegend';
-import { isSpotInDay } from '../../utils/spots';
+import { isSpotInDay, getFocusedDay } from '../../utils/spots';
 
 export default function TripMap() {
-  const { selectedTrip, selectedDayNumber, activeTab, addingSpot } = useTripContext();
+  const { selectedTrip, selectedDayNumber, activeTab, overviewExpanded, addingSpot } = useTripContext();
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const dimOtherDays = activeTab === 'spots';
+  const focusedDay = getFocusedDay(activeTab, overviewExpanded, selectedDayNumber);
 
   const handleExport = useCallback(async () => {
     if (!containerRef.current || !selectedTrip) return;
@@ -53,7 +53,7 @@ export default function TripMap() {
           // Only include non-multi-day spots in polyline
           const polylineSpots = day.spots.filter(s => !s.endDayNumber);
           const positions = polylineSpots.map(s => [s.lat, s.lng] as [number, number]);
-          const dayDimmed = dimOtherDays && day.dayNumber !== selectedDayNumber;
+          const dayDimmed = focusedDay !== null && day.dayNumber !== focusedDay;
           return (
             <span key={`day-${day.dayNumber}`}>
               {positions.length >= 2 && (
@@ -74,7 +74,7 @@ export default function TripMap() {
                   dayNumber={day.dayNumber}
                   orderLabel={idx + 1}
                   dayRangeLabel={spot.endDayNumber ? `Day ${day.dayNumber}–${spot.endDayNumber}` : undefined}
-                  dimmed={dimOtherDays && !isSpotInDay(spot, day.dayNumber, selectedDayNumber)}
+                  dimmed={focusedDay !== null && !isSpotInDay(spot, day.dayNumber, focusedDay)}
                 />
               ))}
             </span>

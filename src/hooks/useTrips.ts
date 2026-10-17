@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Trip, Spot, Expense, Note } from '../types';
+import { Trip, Day, Spot, Expense, Note } from '../types';
 import { generateId } from '../utils/id';
 import { generateDays } from '../utils/dates';
 
@@ -97,7 +97,7 @@ export function useTrips() {
         const newDays = generateDays(updated.startDate, updated.endDate);
         updated.days = newDays.map(nd => {
           const existing = t.days.find(d => d.dayNumber === nd.dayNumber);
-          return existing ? { ...nd, spots: existing.spots } : nd;
+          return existing ? { ...existing, date: nd.date } : nd;
         });
       }
       return updated;
@@ -224,6 +224,19 @@ export function useTrips() {
     }));
   }, [setTrips]);
 
+  const updateDay = useCallback((tripId: string, dayNumber: number, updates: Pick<Day, 'title' | 'journal'>) => {
+    setTrips(prev => prev.map(t => {
+      if (t.id !== tripId) return t;
+      return {
+        ...t,
+        days: t.days.map(d => {
+          if (d.dayNumber !== dayNumber) return d;
+          return { ...d, title: updates.title || undefined, journal: updates.journal || undefined };
+        }),
+      };
+    }));
+  }, [setTrips]);
+
   const removeNote = useCallback((tripId: string, noteId: string) => {
     setTrips(prev => prev.map(t => {
       if (t.id !== tripId) return t;
@@ -236,5 +249,6 @@ export function useTrips() {
     addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
     addExpense, updateExpense, removeExpense,
     addNote, updateNote, removeNote,
+    updateDay,
   };
 }

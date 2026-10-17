@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { Trip, Spot, Expense, Note } from '../types';
+import { Trip, Day, Spot, Expense, Note } from '../types';
 import { useTrips } from '../hooks/useTrips';
 import { useAuth } from './AuthContext';
 
@@ -12,11 +12,13 @@ interface TripContextType {
   selectedDayNumber: number;
   addingSpot: boolean;
   activeTab: TripTab;
+  overviewExpanded: boolean;
   readOnly: boolean;
   setSelectedTripId: (id: string | null) => void;
   setSelectedDayNumber: (day: number) => void;
   setAddingSpot: (adding: boolean) => void;
   setActiveTab: (tab: TripTab) => void;
+  setOverviewExpanded: (expanded: boolean) => void;
   createTrip: (name: string, startDate: string, endDate: string, defaultCurrency?: string) => Trip;
   updateTrip: (id: string, updates: Partial<Pick<Trip, 'name' | 'startDate' | 'endDate' | 'defaultCurrency'>>) => void;
   deleteTrip: (id: string) => void;
@@ -31,6 +33,7 @@ interface TripContextType {
   addNote: (tripId: string, note: Omit<Note, 'id'>) => void;
   updateNote: (tripId: string, noteId: string, updates: Partial<Omit<Note, 'id'>>) => void;
   removeNote: (tripId: string, noteId: string) => void;
+  updateDay: (tripId: string, dayNumber: number, updates: Pick<Day, 'title' | 'journal'>) => void;
   selectedTrip: Trip | undefined;
 }
 
@@ -42,22 +45,25 @@ export function TripProvider({ children }: { children: ReactNode }) {
     addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
     addExpense, updateExpense, removeExpense,
     addNote, updateNote, removeNote,
+    updateDay,
   } = useTrips();
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [selectedDayNumber, setSelectedDayNumber] = useState(1);
   const [addingSpot, setAddingSpot] = useState(false);
   const [activeTab, setActiveTab] = useState<TripTab>('overview');
+  const [overviewExpanded, setOverviewExpanded] = useState(false);
 
   const selectedTrip = trips.find(t => t.id === selectedTripId);
 
   return (
     <TripContext.Provider value={{
-      trips, loaded, selectedTripId, selectedDayNumber, addingSpot, activeTab, readOnly: false,
-      setSelectedTripId, setSelectedDayNumber, setAddingSpot, setActiveTab,
+      trips, loaded, selectedTripId, selectedDayNumber, addingSpot, activeTab, overviewExpanded, readOnly: false,
+      setSelectedTripId, setSelectedDayNumber, setAddingSpot, setActiveTab, setOverviewExpanded,
       createTrip, updateTrip, deleteTrip,
       addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
       addExpense, updateExpense, removeExpense,
       addNote, updateNote, removeNote,
+      updateDay,
       selectedTrip,
     }}>
       {children}
@@ -71,15 +77,17 @@ const noop = () => {};
 export function SharedTripProvider({ trip, children }: { trip: Trip; children: ReactNode }) {
   const [selectedDayNumber, setSelectedDayNumber] = useState(1);
   const [activeTab, setActiveTab] = useState<TripTab>('overview');
+  const [overviewExpanded, setOverviewExpanded] = useState(false);
 
   return (
     <TripContext.Provider value={{
-      trips: [trip], loaded: true, selectedTripId: trip.id, selectedDayNumber, addingSpot: false, activeTab, readOnly: true,
-      setSelectedTripId: noop, setSelectedDayNumber, setAddingSpot: noop, setActiveTab,
+      trips: [trip], loaded: true, selectedTripId: trip.id, selectedDayNumber, addingSpot: false, activeTab, overviewExpanded, readOnly: true,
+      setSelectedTripId: noop, setSelectedDayNumber, setAddingSpot: noop, setActiveTab, setOverviewExpanded,
       createTrip: () => trip, updateTrip: noop, deleteTrip: noop,
       addSpot: noop, updateSpot: noop, removeSpot: noop, reorderSpots: noop, moveSpot: noop,
       addExpense: noop, updateExpense: noop, removeExpense: noop,
       addNote: noop, updateNote: noop, removeNote: noop,
+      updateDay: noop,
       selectedTrip: trip,
     }}>
       {children}

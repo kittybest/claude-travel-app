@@ -18,6 +18,8 @@ export interface Day {
   dayNumber: number;
   date: string;
   spots: Spot[];
+  title?: string;
+  journal?: string;
 }
 
 export interface Expense {
