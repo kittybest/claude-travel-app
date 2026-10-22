@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Trip, Day, Spot, Expense, Note } from '../types';
 import { useTrips } from '../hooks/useTrips';
 import { useAuth } from './AuthContext';
@@ -40,18 +40,24 @@ interface TripContextType {
 const TripContext = createContext<TripContextType | null>(null);
 
 export function TripProvider({ children }: { children: ReactNode }) {
+  const { isAuthorized } = useAuth();
   const {
     trips, loaded, createTrip, updateTrip, deleteTrip,
     addSpot, updateSpot, removeSpot, reorderSpots, moveSpot,
     addExpense, updateExpense, removeExpense,
     addNote, updateNote, removeNote,
     updateDay,
-  } = useTrips();
+  } = useTrips(isAuthorized);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [selectedDayNumber, setSelectedDayNumber] = useState(1);
   const [addingSpot, setAddingSpot] = useState(false);
   const [activeTab, setActiveTab] = useState<TripTab>('overview');
   const [overviewExpanded, setOverviewExpanded] = useState(false);
+
+  // Trips are cleared on logout, so drop the selection too
+  useEffect(() => {
+    if (!isAuthorized) setSelectedTripId(null);
+  }, [isAuthorized]);
 
   const selectedTrip = trips.find(t => t.id === selectedTripId);
 

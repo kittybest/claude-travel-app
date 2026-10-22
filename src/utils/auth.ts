@@ -1,18 +1,16 @@
-const COOKIE_NAME = 'travel_app_auth';
-const TOKEN_VALUE = 'authorized';
+// The auth cookie is HttpOnly and set by the server, so the client can only ask the API about it
 
-export function setAuthCookie() {
-  // Cookie expires in 365 days
-  const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
-  document.cookie = `${COOKIE_NAME}=${TOKEN_VALUE}; expires=${expires}; path=/; SameSite=Strict`;
-}
-
-export function removeAuthCookie() {
-  document.cookie = `${COOKIE_NAME}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict`;
-}
-
-export function hasAuthCookie(): boolean {
-  return document.cookie.split(';').some(c => c.trim().startsWith(`${COOKIE_NAME}=${TOKEN_VALUE}`));
+export async function checkAuth(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/auth');
+    if (res.ok) {
+      const data = await res.json();
+      return data.ok === true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 export async function verifyPassword(input: string): Promise<boolean> {
@@ -29,5 +27,13 @@ export async function verifyPassword(input: string): Promise<boolean> {
     return false;
   } catch {
     return false;
+  }
+}
+
+export async function logoutRequest(): Promise<void> {
+  try {
+    await fetch('/api/auth', { method: 'DELETE' });
+  } catch {
+    // Ignore network errors; local state is cleared regardless
   }
 }

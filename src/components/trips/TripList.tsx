@@ -7,7 +7,7 @@ import TripForm from './TripForm';
 
 export default function TripList() {
   const { trips, loaded, selectedTripId, setSelectedTripId, setSelectedDayNumber, setActiveTab, setOverviewExpanded } = useTripContext();
-  const { isAuthorized } = useAuth();
+  const { isAuthorized, authChecked } = useAuth();
   const [showForm, setShowForm] = useState(false);
 
   const handleSelect = (id: string) => {
@@ -32,7 +32,14 @@ export default function TripList() {
           </button>
         )}
       </div>
-      {!loaded ? (
+      {!authChecked ? (
+        <p className="text-gray-400 text-sm text-center py-8">Loading trips...</p>
+      ) : !isAuthorized ? (
+        <div className="text-center py-8">
+          <p className="text-gray-600 text-sm font-medium">No access</p>
+          <p className="text-gray-400 text-xs mt-1">Open a trip from a shared link to view it.</p>
+        </div>
+      ) : !loaded ? (
         <p className="text-gray-400 text-sm text-center py-8">Loading trips...</p>
       ) : trips.length === 0 ? (
         <p className="text-gray-400 text-sm text-center py-8">No trips yet.</p>

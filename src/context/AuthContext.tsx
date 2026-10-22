@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { hasAuthCookie, setAuthCookie, removeAuthCookie, verifyPassword } from '../utils/auth';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { checkAuth, verifyPassword, logoutRequest } from '../utils/auth';
 
 interface AuthContextType {
   isAuthorized: boolean;
+  authChecked: boolean;
   login: (password: string) => Promise<boolean>;
   logout: () => void;
 }
@@ -10,12 +11,19 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isAuthorized, setIsAuthorized] = useState(() => hasAuthCookie());
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    checkAuth().then(ok => {
+      setIsAuthorized(ok);
+      setAuthChecked(true);
+    });
+  }, []);
 
   const login = useCallback(async (password: string) => {
     const ok = await verifyPassword(password);
     if (ok) {
-      setAuthCookie();
       setIsAuthorized(true);
       return true;
     }
@@ -23,12 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
-    removeAuthCookie();
+    logoutRequest();
     setIsAuthorized(false);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthorized, login, logout }}>
+    <AuthContext.Provider value={{ isAuthorized, authChecked, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

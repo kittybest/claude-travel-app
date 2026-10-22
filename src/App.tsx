@@ -9,7 +9,7 @@ import TripMap from './components/map/TripMap';
 import LoginModal from './components/auth/LoginModal';
 import { LockIcon, UnlockIcon } from './components/ui/Icons';
 import { fixLeafletIcons } from './utils/leafletSetup';
-import { decodeTripFromUrl } from './utils/shareTrip';
+import { getShareIdFromHash, fetchSharedTrip } from './utils/shareTrip';
 import { Trip } from './types';
 
 fixLeafletIcons();
@@ -62,24 +62,40 @@ function TripLayout({ sidebar }: { sidebar: ReactNode }) {
 }
 
 function AppContent() {
-  const { selectedTripId } = useTripContext();
+  const { isAuthorized, authChecked } = useAuth();
+  const { selectedTrip, setSelectedTripId, setSelectedDayNumber, setActiveTab, setOverviewExpanded } = useTripContext();
+  const [shareId, setShareId] = useState(() => getShareIdFromHash());
   const [sharedTrip, setSharedTrip] = useState<Trip | null>(null);
 
   useEffect(() => {
-    decodeTripFromUrl().then(trip => {
-      if (trip) setSharedTrip(trip);
-    });
-
-    const onHashChange = () => {
-      decodeTripFromUrl().then(trip => {
-        setSharedTrip(trip);
-      });
-    };
+    const onHashChange = () => setShareId(getShareIdFromHash());
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  if (sharedTrip) {
+  useEffect(() => {
+    if (!shareId || !authChecked) return;
+
+    // Authorized users open the trip in the normal, editable view
+    if (isAuthorized) {
+      setSelectedTripId(shareId);
+      setSelectedDayNumber(1);
+      setActiveTab('overview');
+      setOverviewExpanded(false);
+      setSharedTrip(null);
+      setShareId(null);
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      return;
+    }
+
+    let cancelled = false;
+    fetchSharedTrip(shareId).then(trip => {
+      if (!cancelled) setSharedTrip(trip);
+    });
+    return () => { cancelled = true; };
+  }, [shareId, authChecked, isAuthorized, setSelectedTripId, setSelectedDayNumber, setActiveTab, setOverviewExpanded]);
+
+  if (shareId && sharedTrip && !isAuthorized) {
     return (
       <SharedTripProvider key={sharedTrip.id} trip={sharedTrip}>
         <TripLayout sidebar={<TripDetail />} />
@@ -87,7 +103,7 @@ function AppContent() {
     );
   }
 
-  return <TripLayout sidebar={selectedTripId ? <TripDetail /> : <TripList />} />;
+  return <TripLayout sidebar={selectedTrip ? <TripDetail /> : <TripList />} />;
 }
 
 export default function App() {

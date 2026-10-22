@@ -1,58 +1,27 @@
-import LZString from 'lz-string';
 import { Trip } from '../types';
 
-export async function encodeTripToUrl(trip: Trip): Promise<string> {
-  const base = `${window.location.origin}${window.location.pathname}`;
-  try {
-    const res = await fetch('/api/share', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: trip.id, trip }),
-    });
-    if (res.ok) {
-      const { id } = await res.json();
-      return `${base}#/s/${id}`;
-    }
-  } catch {
-    // Fall back to LZ compression if API fails
-  }
-  const json = JSON.stringify(trip);
-  const compressed = LZString.compressToEncodedURIComponent(json);
-  return `${base}#/share/${compressed}`;
+const SHARE_PREFIX = '#/s/';
+
+// Share links point at the trip id, so viewers always see the latest data
+export function getShareUrl(trip: Trip): string {
+  return `${window.location.origin}${window.location.pathname}${SHARE_PREFIX}${trip.id}`;
 }
 
-export async function decodeTripFromUrl(): Promise<Trip | null> {
+export function getShareIdFromHash(): string | null {
   const hash = window.location.hash;
+  if (!hash.startsWith(SHARE_PREFIX)) return null;
+  return hash.slice(SHARE_PREFIX.length) || null;
+}
 
-  // Short URL: #/s/<id>
-  if (hash.startsWith('#/s/')) {
-    const id = hash.slice('#/s/'.length);
-    try {
-      const res = await fetch(`/api/share?id=${encodeURIComponent(id)}`);
-      if (res.ok) {
-        const { trip } = await res.json();
-        return trip as Trip;
-      }
-    } catch {
-      // API failed
+export async function fetchSharedTrip(id: string): Promise<Trip | null> {
+  try {
+    const res = await fetch(`/api/share?id=${encodeURIComponent(id)}`);
+    if (res.ok) {
+      const { trip } = await res.json();
+      return trip as Trip;
     }
-    return null;
+  } catch {
+    // API failed
   }
-
-  // Legacy: #/share/<encoded>
-  if (hash.startsWith('#/share/')) {
-    try {
-      const encoded = hash.slice('#/share/'.length);
-      const decompressed = LZString.decompressFromEncodedURIComponent(encoded);
-      if (decompressed) {
-        return JSON.parse(decompressed) as Trip;
-      }
-      const json = decodeURIComponent(escape(atob(encoded)));
-      return JSON.parse(json) as Trip;
-    } catch {
-      return null;
-    }
-  }
-
   return null;
 }

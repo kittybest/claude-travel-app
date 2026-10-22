@@ -7,7 +7,7 @@ import ExpensePanel from '../expenses/ExpensePanel';
 import NotePanel from '../notes/NotePanel';
 import TripForm from './TripForm';
 import TripOverview from './TripOverview';
-import { encodeTripToUrl } from '../../utils/shareTrip';
+import { getShareUrl } from '../../utils/shareTrip';
 
 export default function TripDetail() {
   const { selectedTrip, setSelectedTripId, deleteTrip, activeTab, setActiveTab, setAddingSpot, readOnly } = useTripContext();
@@ -30,7 +30,7 @@ export default function TripDetail() {
   };
 
   const handleShare = async () => {
-    const url = await encodeTripToUrl(selectedTrip);
+    const url = getShareUrl(selectedTrip);
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);

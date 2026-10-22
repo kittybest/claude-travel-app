@@ -15,6 +15,9 @@ function getLocalTrips(): Trip[] {
 async function fetchTrips(): Promise<Trip[]> {
   try {
     const res = await fetch('/api/trips');
+    if (res.status === 401) {
+      return [];
+    }
     if (res.ok) {
       const { trips } = await res.json();
       const remoteTrips: Trip[] = trips || [];
@@ -50,18 +53,26 @@ async function saveTrips(trips: Trip[]): Promise<void> {
   }
 }
 
-export function useTrips() {
+export function useTrips(enabled: boolean) {
   const [trips, setTripsState] = useState<Trip[]>([]);
   const [loaded, setLoaded] = useState(false);
   const saveTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  // Load trips from Redis on mount
+  // Load trips from Redis once authorized; clear them on logout without saving
   useEffect(() => {
+    if (!enabled) {
+      setTripsState([]);
+      setLoaded(false);
+      return;
+    }
+    let cancelled = false;
     fetchTrips().then(t => {
+      if (cancelled) return;
       setTripsState(t);
       setLoaded(true);
     });
-  }, []);
+    return () => { cancelled = true; };
+  }, [enabled]);
 
   // Debounced save to Redis whenever trips change (skip initial load)
   const setTrips = useCallback((updater: (prev: Trip[]) => Trip[]) => {

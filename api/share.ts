@@ -6,45 +6,36 @@ const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
+const TRIPS_KEY = 'app:trips';
+
+// Public read of a single trip by id, always serving the latest data
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  if (req.method === 'POST') {
-    try {
-      const { id, trip } = req.body;
-      if (!trip || !id) {
-        return res.status(400).json({ error: 'Missing trip data or id' });
-      }
-      await redis.set(`trip:${id}`, JSON.stringify(trip));
-      return res.status(200).json({ id });
-    } catch (err) {
-      console.error('Failed to save trip:', err);
-      return res.status(500).json({ error: 'Failed to save trip' });
-    }
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (req.method === 'GET') {
-    try {
-      const { id } = req.query;
-      if (!id || typeof id !== 'string') {
-        return res.status(400).json({ error: 'Missing id' });
-      }
-      const data = await redis.get(`trip:${id}`);
-      if (!data) {
-        return res.status(404).json({ error: 'Trip not found' });
-      }
-      return res.status(200).json({ trip: typeof data === 'string' ? JSON.parse(data) : data });
-    } catch (err) {
-      console.error('Failed to get trip:', err);
-      return res.status(500).json({ error: 'Failed to get trip' });
+  try {
+    const { id } = req.query;
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ error: 'Missing id' });
     }
+    const data = await redis.get(TRIPS_KEY);
+    const trips: { id: string }[] = !data ? [] : typeof data === 'string' ? JSON.parse(data) : data;
+    const trip = trips.find(t => t.id === id);
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+    return res.status(200).json({ trip });
+  } catch (err) {
+    console.error('Failed to get trip:', err);
+    return res.status(500).json({ error: 'Failed to get trip' });
   }
-
-  return res.status(405).json({ error: 'Method not allowed' });
 }
